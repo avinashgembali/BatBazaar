@@ -13,7 +13,7 @@ const Shop = () => {
   const errorShown = useRef(false);
 
   useEffect(() => {
-    fetch('http://localhost:8000/api/bats/bat')
+    fetch('https://batbazaar.onrender.com/api/bats/bat')
       .then(res => {
         if (!res.ok) throw new Error('Failed to fetch');
         return res.json();
@@ -59,7 +59,7 @@ const Shop = () => {
     };
 
     try {
-      const response = await fetch(`http://localhost:8000/api/cart/${user.email}`, {
+      const response = await fetch(`https://batbazaar.onrender.com/api/cart/${user.email}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(item),
