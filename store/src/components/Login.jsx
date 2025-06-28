@@ -55,7 +55,7 @@ const Login = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:8000/api/users/register', {
+      const response = await fetch('https://batbazaar.onrender.com/api/users/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, email, password }),
@@ -83,7 +83,7 @@ const Login = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:8000/api/users/login', {
+      const response = await fetch('https://batbazaar.onrender.com/api/users/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
