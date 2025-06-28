@@ -5,13 +5,13 @@ const AdminOrderAndSales = () => {
   const [orders, setOrders] = useState([]);
 
   useEffect(() => {
-    fetch('http://localhost:8000/api/admin/orders')
+    fetch('https://batbazaar.onrender.com/api/admin/orders')
       .then(res => res.json())
       .then(setOrders);
   }, []);
 
   const handleDeliver = async (orderId) => {
-    const res = await fetch(`http://localhost:8000/api/admin/orders/${orderId}/deliver`, {
+    const res = await fetch(`https://batbazaar.onrender.com/api/admin/orders/${orderId}/deliver`, {
       method: 'PUT'
     });
     const updated = await res.json();
