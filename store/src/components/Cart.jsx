@@ -19,7 +19,7 @@ const Cart = () => {
 
   const handleRemove = async (index) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/cart/${user.email}/${index}`, {
+      const res = await fetch(`https://batbazaar.onrender.com/api/cart/${user.email}/${index}`, {
         method: 'DELETE',
       });
       const updated = await res.json();
@@ -32,7 +32,7 @@ const Cart = () => {
 
   const handlePlaceOrder = async () => {
     try {
-      const res = await fetch(`http://localhost:8000/api/orders/place`, {
+      const res = await fetch(`https://batbazaar.onrender.com/api/orders/place`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: user.email, items: cartItems }),
