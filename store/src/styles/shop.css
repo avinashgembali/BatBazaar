@@ -1,0 +1,185 @@
+.shop-container {
+  display: flex;
+  gap: 2rem;
+  padding: 10px;
+  flex-wrap: wrap;
+}
+
+/* ---------- Sidebar Filters ---------- */
+.filters {
+  width: 220px;
+  flex-shrink: 0;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.filters h2 {
+  font-size: 16px;
+  margin-bottom: 10px;
+  color: #222;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 4px;
+  margin-top: 20px;
+}
+
+.filters h2:first-of-type {
+  margin-top: 0;
+}
+
+.filters div {
+  margin: 6px 0;
+  display: flex;
+  align-items: center;
+}
+
+.filters input[type="radio"] {
+  margin-right: 10px;
+  cursor: pointer;
+  accent-color: #2563eb;
+}
+
+.filters label {
+  font-size: 14px;
+  cursor: pointer;
+  color: #333;
+}
+
+.filters strong {
+  font-weight: 500;
+}
+
+/* ---------- Product Display Grid ---------- */
+.product-display {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding: 20px;
+  flex: 1; /* Take remaining space */
+  justify-content: center;
+}
+
+/* ---------- Individual Product Card ---------- */
+.bat-card {
+  width: 240px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #ffffff;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  font-family: 'Segoe UI', sans-serif;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 15px;
+  align-self: flex-start; /* 🧩 This line prevents vertical stretching */
+}
+
+
+.bat-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+}
+
+.bat-card img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.2); /* Light black border */
+}
+
+/* ---------- Info Section ---------- */
+.bat-info {
+  flex: 1;
+  text-align: left;
+  padding: 8px 0;
+}
+
+.bat-info p {
+  margin: 6px 0;
+  font-size: 14px;
+  color: #333;
+}
+
+/* ---------- Controls Section ---------- */
+.controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 12px;
+}
+
+.quantity-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.quantity-wrapper input {
+  width: 50px;
+  padding: 4px 6px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.add-to-cart {
+  background-color: #2563eb; /* Vibrant blue */
+  color: #ffffff; /* White cart symbol */
+  padding: 10px 16px;
+  font-size: 18px;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3); /* soft blue shadow */
+  transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+}
+
+.add-to-cart:hover {
+  background-color: #1d4ed8; /* Slightly darker blue */
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 6px 16px rgba(29, 78, 216, 0.4); /* deeper shadow on hover */
+}
+
+
+
+/* ---------- Media Queries ---------- */
+
+@media screen and (max-width: 1024px) {
+  .shop-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .filters {
+    width: 100%;
+    max-width: 500px;
+    margin-bottom: 20px;
+  }
+
+  .product-display {
+    justify-content: center;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .bat-card {
+    width: 45%; /* Two cards per row */
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .bat-card {
+    width: 100%; /* Single column layout */
+  }
+
+  .bat-info p {
+    font-size: 13px;
+  }
+}

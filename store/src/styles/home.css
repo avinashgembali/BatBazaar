@@ -1,0 +1,100 @@
+/* ------------------ Hero Section ------------------ */
+.hero-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.hero-img {
+  flex: 1 1 300px;
+  display: flex;
+  justify-content: center;
+}
+
+.hero-img img {
+  width: 70%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.hero-quote {
+  flex: 1 1 300px;
+  font-size: 3rem;
+  font-weight: 500;
+  line-height: 1.5;
+  padding: 0 20px;
+  text-align: center;
+}
+
+.hero-quote span {
+  display: inline-block;
+  transition: transform 0.3s ease, color 0.3s ease;
+  cursor: pointer;
+}
+
+.unleash {
+  color: #e63946;
+  font-weight: bold;
+}
+
+.power {
+  color: #457b9d;
+  font-weight: bold;
+}
+
+.stroke {
+  color: #2a9d8f;
+  font-weight: bold;
+}
+
+.hero-quote span:hover {
+  transform: scale(1.2);
+}
+
+.admin-home {
+  padding: 2rem;
+  font-family: sans-serif;
+  text-align: center;
+}
+
+.admin-options {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-top: 2rem;
+  flex-wrap: wrap;
+}
+
+.admin-card {
+  background-color: #f9f9f9;
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  padding: 20px;
+  width: 280px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.admin-card h3 {
+  margin-top: 0;
+  color: #333;
+}
+
+.admin-link {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 8px 14px;
+  background-color: #2563eb;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 6px;
+  transition: background-color 0.3s ease;
+}
+
+.admin-link:hover {
+  background-color: #1d4ed8;
+  text-decoration: none;
+}

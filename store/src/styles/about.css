@@ -1,0 +1,90 @@
+.bat-sources ,.bat-levels , .bat-test,.bat-passion{
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #f9f9f9;
+    line-height: 1.6;
+  }
+  
+  h1 {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+  
+  hr {
+    margin: 40px 0;
+    border: 1px solid #ddd;
+  }
+  
+  /* ====== Section Layouts ====== */
+  .bat-sources,
+  .bat-test,
+  .bat-levels,
+  .bat-passion {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 30px;
+    flex-wrap: wrap;
+  }
+  
+  /* ====== Text Container Flex ====== */
+  .source-content,
+  .test-content,
+  .levels-content,
+  .Passion-content {
+    flex: 1;
+  }
+  
+  /* ====== Image Styling ====== */
+  .bat-sources img,
+  .bat-test img,
+  .bat-levels img,
+  .bat-passion img {
+    flex: 1;
+    width: 100%;
+    max-width: 500px;
+    height: 300px;
+    object-fit: cover;
+    border-radius: 12px;
+    min-width: 300px;
+  }
+  
+  /* ====== Alternate Image on Left for Even Sections ====== */
+  .bat-test,
+  .bat-passion {
+    flex-direction: row-reverse;
+  }
+  
+  /* ====== Responsive Tweaks ====== */
+  @media screen and (max-width: 768px) {
+    .bat-sources,
+    .bat-test,
+    .bat-levels,
+    .bat-passion {
+      flex-direction: column;
+      text-align: center;
+    }
+  
+    .bat-test,
+    .bat-passion {
+      flex-direction: column;
+    }
+  
+    .source-content,
+    .test-content,
+    .levels-content,
+    .Passion-content {
+      width: 100%;
+    }
+  
+    .bat-sources img,
+    .bat-test img,
+    .bat-levels img,
+    .bat-passion img {
+      max-width: 100%;
+      height: auto;
+      min-width: unset;
+    }
+  }
+  
