@@ -10,7 +10,7 @@ const Cart = () => {
 
   useEffect(() => {
     if (isLoggedIn) {
-      fetch(`http://localhost:8000/api/cart/${user.email}`)
+      fetch(`https://batbazaar.onrender.com/api/cart/${user.email}`)
         .then(res => res.json())
         .then(data => setCartItems(data))
         .catch(() => toast.error('Failed to fetch cart'));
