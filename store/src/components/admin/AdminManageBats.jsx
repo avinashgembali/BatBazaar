@@ -8,7 +8,7 @@ const AdminManageBats = () => {
     const [imageFile, setImageFile] = useState(null);
 
     useEffect(() => {
-        fetch('http://localhost:8000/api/bats/bat')
+        fetch('https://batbazaar.onrender.com/api/bats/bat')
             .then(res => res.json())
             .then(setBats)
             .catch(() => toast.error('Failed to fetch bats.'));
@@ -16,7 +16,7 @@ const AdminManageBats = () => {
 
     const handleDelete = async (id) => {
         try {
-            const res = await fetch(`http://localhost:8000/api/admin/bat/${id}`, {
+            const res = await fetch(`https://batbazaar.onrender.com/api/admin/bat/${id}`, {
                 method: 'DELETE'
             });
             if (!res.ok) throw new Error('Failed to delete');
@@ -35,7 +35,7 @@ const AdminManageBats = () => {
         formData.append('img', imageFile);
 
         try {
-            const res = await fetch('http://localhost:8000/api/admin/bat', {
+            const res = await fetch('https://batbazaar.onrender.com/api/admin/bat', {
                 method: 'POST',
                 body: formData
             });
