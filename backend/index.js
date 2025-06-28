@@ -17,8 +17,11 @@ connectDB();
 
 // ✅ CORS configuration (frontend is running on localhost:5173)
 app.use(cors({
-  origin: 'http://localhost:5173', // allow your frontend
-  credentials: true               // allow cookies, authorization headers, etc.
+  origin: [
+    'http://localhost:5173',
+    'https://batbazaar-1.onrender.com' // allow deployed frontend
+  ],
+  credentials: true
 }));
 
 // ✅ Middleware
