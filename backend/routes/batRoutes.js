@@ -23,7 +23,7 @@ router.get('/bat', async (req, res) => {
 
     const fullBats = bats.map(b => ({
       ...b.toObject(),
-      imgUrl: `http://localhost:8000/uploads/${b.img}`,
+      imgUrl: `https://batbazaar.onrender.com/uploads/${b.img}`,
     }));
 
     res.json(fullBats);
