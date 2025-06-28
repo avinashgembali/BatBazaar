@@ -9,7 +9,7 @@ const Order = () => {
 
   useEffect(() => {
     if (user?.email) {
-      fetch(`http://localhost:8000/api/orders/user/${user.email}`)
+      fetch(`https://batbazaar.onrender.com/api/orders/user/${user.email}`)
         .then(res => res.json())
         .then(data => setOrders(data))
         .catch(() => toast.error('Failed to fetch orders')); 
@@ -28,7 +28,7 @@ const Order = () => {
               <div className="order-items">
                 {order.items.map((item, idx) => (
                   <div key={idx} className="order-item">
-                    <img src={`http://localhost:8000/uploads/${item.img}`} alt={item.name} />
+                    <img src={`https://batbazaar.onrender.com/uploads/${item.img}`} alt={item.name} />
                     <div className="item-details">
                       <p><strong>{item.name}</strong></p>
                       <p>Brand: {item.brand}</p>
