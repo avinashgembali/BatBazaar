@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import useAuthStore from '../../useAuthStore';
 import { FaShoppingCart } from 'react-icons/fa';
 import '../styles/shop.css';
-import { toast } from 'react-toastify'; // ✅ Import toast
+import { toast } from 'react-toastify';
 
 const Shop = () => {
   const { isLoggedIn, user } = useAuthStore();
@@ -10,9 +10,11 @@ const Shop = () => {
   const [brands, setBrands] = useState([]);
   const [filters, setFilters] = useState({ brand: 'none', price: 'none', rating: 'none', sort: 'none' });
   const [quantities, setQuantities] = useState({});
+  const [loading, setLoading] = useState(true);
   const errorShown = useRef(false);
 
   useEffect(() => {
+    setLoading(true);
     fetch('https://batbazaar.onrender.com/api/bats/bat')
       .then(res => {
         if (!res.ok) throw new Error('Failed to fetch');
@@ -20,7 +22,7 @@ const Shop = () => {
       })
       .then(data => {
         if (Array.isArray(data) && data.length === 0 && !errorShown.current) {
-          toast.info('No bats in store.');  
+          toast.info('No bats in store.');
           errorShown.current = true;
         }
 
@@ -32,10 +34,11 @@ const Shop = () => {
       })
       .catch(() => {
         if (!errorShown.current) {
-          toast.error('Failed to fetch bats.');  
+          toast.error('Failed to fetch bats.');
           errorShown.current = true;
         }
-      });
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   const handleFilterChange = (e) => {
@@ -49,7 +52,7 @@ const Shop = () => {
 
   const handleAddToCart = async (bat, index) => {
     if (!isLoggedIn || !user?.email) {
-      toast.warn('Please login to add items to cart.');  
+      toast.warn('Please login to add items to cart.');
       return;
     }
 
@@ -66,9 +69,9 @@ const Shop = () => {
       });
 
       if (!response.ok) throw new Error();
-      toast.success('Added to cart!');  
+      toast.success('Added to cart!');
     } catch {
-      toast.error('Failed to add item to cart.');  
+      toast.error('Failed to add item to cart.');
     }
   };
 
@@ -163,7 +166,9 @@ const Shop = () => {
       </div>
 
       <div className="product-display">
-        {filteredBats.length === 0 ? (
+        {loading ? (
+          <p>Loading bats...</p>
+        ) : filteredBats.length === 0 ? (
           <p>No bats match your filters.</p>
         ) : (
           filteredBats.map((bat, index) => (
