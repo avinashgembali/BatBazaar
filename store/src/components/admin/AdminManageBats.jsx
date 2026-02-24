@@ -14,6 +14,18 @@ const AdminManageBats = () => {
             .catch(() => toast.error('Failed to fetch bats.'));
     }, []);
 
+    const fetchBats = async () => {
+        try {
+            const res = await fetch('https://batbazaar.onrender.com/api/bats/bat');
+            if (!res.ok) throw new Error('Failed to fetch');
+            const data = await res.json();
+            setBats(data);
+        } catch (err) {
+            toast.error('Failed to fetch bats.');
+            console.error(err);
+        }
+    };
+
     const handleDelete = async (id) => {
         try {
             const res = await fetch(`https://batbazaar.onrender.com/api/admin/bat/${id}`, {
@@ -44,6 +56,7 @@ const AdminManageBats = () => {
 
             const newBat = await res.json();
             setBats([...bats, newBat]);
+            fetchBats();
 
             toast.success('✅ Bat added successfully!');
             setForm({ name: '', type: '', brand: '', rating: '', price: '' });
