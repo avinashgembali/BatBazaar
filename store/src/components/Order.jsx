@@ -12,7 +12,7 @@ const Order = () => {
       fetch(`https://batbazaar.onrender.com/api/orders/user/${user.email}`)
         .then(res => res.json())
         .then(data => setOrders(data))
-        .catch(() => toast.error('Failed to fetch orders')); 
+        .catch(() => toast.error('Failed to fetch orders'));
     }
   }, [user]);
 
@@ -28,7 +28,7 @@ const Order = () => {
               <div className="order-items">
                 {order.items.map((item, idx) => (
                   <div key={idx} className="order-item">
-                    <img src={`https://batbazaar.onrender.com/uploads/${item.img}`} alt={item.name} />
+                    <img src={item.img} alt={item.name} />
                     <div className="item-details">
                       <p><strong>{item.name}</strong></p>
                       <p>Brand: {item.brand}</p>

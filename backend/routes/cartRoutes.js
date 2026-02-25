@@ -10,7 +10,7 @@ router.get('/:email', async (req, res) => {
 
     const cartItemsWithImgUrl = cart.items.map(item => ({
       ...item.toObject(),
-      imgUrl: `https://batbazaar.onrender.com/uploads/${item.img}`
+      imgUrl: item.img
     }));
 
     res.json(cartItemsWithImgUrl);

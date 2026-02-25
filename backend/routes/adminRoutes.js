@@ -6,18 +6,44 @@ const multer = require('multer');
 const path = require('path');
 const Order = require('../models/order');
 
-// Configure Multer for image upload
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, 'uploads/'),
-  filename: (req, file, cb) => cb(null, file.originalname) 
+const cloudinary = require('cloudinary').v2;
+
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUD_NAME,
+  api_key: process.env.API_KEY,
+  api_secret: process.env.API_SECRET,
 });
 
+// Configure Multer for memory storage
+const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 // Create Bat
 router.post('/bat', upload.single('img'), async (req, res) => {
   try {
     const { name, type, brand, rating, price } = req.body;
+    let imageUrl = '';
+
+    if (req.file) {
+      
+      // Wrap cloudinary upload in a promise
+      const uploadResult = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { folder: 'batbazaar' },
+          (error, result) => {
+            if (error) {
+              console.error("Cloudinary upload error:", error);
+              return reject(error);
+            }
+            resolve(result);
+          }
+        );
+        stream.end(req.file.buffer);
+      });
+
+      imageUrl = uploadResult.secure_url;
+    }
 
     const bat = new Bat({
       name,
@@ -25,7 +51,7 @@ router.post('/bat', upload.single('img'), async (req, res) => {
       brand,
       rating,
       price,
-      img: req.file.filename, // <-- Multer stores this
+      img: imageUrl || req.body.img, // fallback if needed
     });
 
     await bat.save();
