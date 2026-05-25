@@ -1,41 +1,77 @@
-/* src/styles/footer.css */
 .footer {
-  background-color: black;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: #94a3b8;
+  padding: 40px 32px 28px;
+  font-size: 0.88rem;
+}
+
+.footer-inner {
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+.footer-brand {
+  font-size: 1.2rem;
+  font-weight: 800;
   color: white;
-  text-align: center;
-  padding: 30px 15px;
+  letter-spacing: -0.3px;
 }
 
 .footer-nav {
-  margin-bottom: 10px;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 15px;
+  gap: 6px 4px;
+  align-items: center;
 }
 
 .footer-nav a {
   text-decoration: none;
-  color: white;
+  color: #94a3b8;
   cursor: pointer;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  transition: color var(--transition), background var(--transition);
+  font-weight: 500;
 }
 
 .footer-nav a:hover {
-  text-decoration: underline;
+  color: white;
+  background: rgba(255,255,255,0.06);
+}
+
+.footer-sep {
+  color: #334155;
 }
 
 .social-media {
-  margin-top: 10px;
+  display: flex;
+  gap: 4px;
 }
 
 .social-media a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  color: #64748b;
+  font-size: 1.1rem;
   text-decoration: none;
-  color: white;
-  padding: 10px;
-  font-size: 24px; /* Adjusts icon size */
-  transition: color 0.3s;
+  transition: color var(--transition), background var(--transition);
 }
 
 .social-media a:hover {
-  color: #f0c040; /* Optional hover color */
+  color: white;
+  background: rgba(255,255,255,0.08);
+}
+
+.footer-copy {
+  color: #475569;
+  font-size: 0.8rem;
 }

@@ -1,82 +1,178 @@
 .login-page {
-  height: 100vh;
+  display: flex;
+  min-height: calc(100vh - 64px);
+}
+
+/* ---------- Left Brand Panel ---------- */
+.login-brand {
+  flex: 1;
+  background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 60%, #3b82f6 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: Arial, sans-serif;
-}
-
-.container {
-  background-color: white;
-  padding: 2rem;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  text-align: center;
-  width: 300px;
-}
-
-.container h1 {
-  margin-bottom: 1.5rem;
-  color: #333;
-}
-
-input[type="text"],
-input[type="email"],
-input[type="password"] {
-  width: 100%;
-  padding: 10px;
-  margin: 8px 0;
-  border-radius: 5px;
-  border: 1px solid #ccc;
-}
-
-button {
-  width: 100%;
-  padding: 10px;
-  margin-top: 12px;
-  border: none;
-  background-color: hsl(211, 100%, 50%);
+  padding: 48px 40px;
   color: white;
-  font-size: 1rem;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
 }
 
-button:hover {
-  background-color: hsl(211, 100%, 35%);
+.brand-content {
+  max-width: 360px;
 }
 
-p {
-  margin-top: 1rem;
+.brand-content h1 {
+  font-size: 2.8rem;
+  font-weight: 800;
+  margin: 0 0 16px;
+  letter-spacing: -1px;
+  text-align: left;
+}
+
+.brand-content h1 span {
+  margin-left: 8px;
+}
+
+.brand-content p {
+  font-size: 1.05rem;
+  opacity: 0.88;
+  line-height: 1.6;
+  margin: 0 0 36px;
+}
+
+.brand-stats {
+  display: flex;
+  gap: 32px;
+}
+
+.brand-stats div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.brand-stats strong {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #fbbf24;
+}
+
+.brand-stats span {
+  font-size: 0.78rem;
+  opacity: 0.75;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* ---------- Right Form Panel ---------- */
+.login-form-panel {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 32px;
+  background: var(--color-bg);
+}
+
+.form-card {
+  width: 100%;
+  max-width: 380px;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+/* ---------- Tabs ---------- */
+.form-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.tab {
+  flex: 1;
+  padding: 14px;
+  background: transparent;
+  border: none;
   font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  font-family: var(--font-base);
+  transition: color var(--transition), background var(--transition);
+  border-radius: 0;
+  margin: 0;
+  width: auto;
 }
 
-a {
-  color: #007bff;
-  text-decoration: none;
+.tab:hover {
+  background: var(--color-bg);
+  color: var(--color-text);
 }
 
-a:hover {
-  text-decoration: underline;
+.tab.active {
+  color: var(--color-primary);
+  border-bottom: 2px solid var(--color-primary);
+  background: transparent;
 }
 
-@media (max-width: 480px) {
-  .container {
-    padding: 1.5rem;
-    border-radius: 8px;
-  }
+/* ---------- Form Fields ---------- */
+.form-fields {
+  padding: 28px 28px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
 
-  .container h1 {
-    font-size: 1.3rem;
-  }
+.form-fields h2 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0 0 4px;
+}
 
-  input,
-  button {
-    font-size: 0.95rem;
-  }
+.form-fields input {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-family: var(--font-base);
+  color: var(--color-text);
+  background: var(--color-bg);
+  transition: border-color var(--transition), box-shadow var(--transition);
+  box-sizing: border-box;
+}
 
-  p {
-    font-size: 0.85rem;
-  }
+.form-fields input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
+  background: white;
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 12px;
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 0.95rem;
+  font-weight: 700;
+  font-family: var(--font-base);
+  cursor: pointer;
+  margin-top: 4px;
+  transition: background var(--transition), transform var(--transition);
+}
+
+.submit-btn:hover {
+  background: var(--color-primary-dark);
+  transform: translateY(-1px);
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 768px) {
+  .login-page { flex-direction: column; }
+  .login-brand { padding: 36px 24px; }
+  .brand-content h1 { font-size: 2rem; }
+  .login-form-panel { padding: 32px 16px; }
 }
