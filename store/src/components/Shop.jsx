@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import useAuthStore from '../../useAuthStore';
 import { FaShoppingCart } from 'react-icons/fa';
 import '../styles/shop.css';
@@ -193,9 +193,11 @@ const Shop = () => {
                     style={{ width: '50px', marginLeft: '10px' }}
                   />
                 </label>
-                <button className="add-to-cart" onClick={() => handleAddToCart(bat, index)}>
-                  <FaShoppingCart style={{ color: 'white' }} />
-                </button>
+                {user?.role !== 'admin' && (
+                  <button className="add-to-cart" onClick={() => handleAddToCart(bat, index)}>
+                    <FaShoppingCart style={{ color: 'white' }} />
+                  </button>
+                )}
               </div>
             </div>
           ))
