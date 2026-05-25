@@ -10,7 +10,7 @@ const Cart = () => {
 
   useEffect(() => {
     if (isLoggedIn) {
-      fetch(`https://batbazaar.onrender.com/api/cart/${user.email}`)
+      fetch(`${import.meta.env.VITE_API_URL}/cart/${user.email}`)
         .then(res => res.json())
         .then(data => setCartItems(data))
         .catch(() => toast.error('Failed to fetch cart'));
@@ -19,7 +19,7 @@ const Cart = () => {
 
   const handleRemove = async (index) => {
     try {
-      const res = await fetch(`https://batbazaar.onrender.com/api/cart/${user.email}/${index}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/cart/${user.email}/${index}`, {
         method: 'DELETE',
       });
       const updated = await res.json();
@@ -32,7 +32,7 @@ const Cart = () => {
 
   const handlePlaceOrder = async () => {
     try {
-      const res = await fetch(`https://batbazaar.onrender.com/api/orders/place`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/orders/place`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: user.email, items: cartItems }),

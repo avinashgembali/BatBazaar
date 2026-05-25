@@ -9,7 +9,7 @@ const Order = () => {
 
   useEffect(() => {
     if (user?.email) {
-      fetch(`https://batbazaar.onrender.com/api/orders/user/${user.email}`)
+      fetch(`${import.meta.env.VITE_API_URL}/orders/user/${user.email}`)
         .then(res => res.json())
         .then(data => setOrders(data))
         .catch(() => toast.error('Failed to fetch orders'));
