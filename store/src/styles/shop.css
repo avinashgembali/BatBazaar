@@ -3,53 +3,69 @@
   gap: 24px;
   padding: 24px;
   align-items: flex-start;
+  /* overflow must NOT be hidden — sticky positioning breaks inside overflow:hidden parents */
 }
 
 /* ---------- Sidebar ---------- */
 .filters {
-  width: 220px;
+  width: 210px;
   flex-shrink: 0;
   background: var(--color-surface);
   border-radius: var(--radius-md);
-  padding: 20px;
+  padding: 14px 16px;
   box-shadow: var(--shadow-md);
   align-self: flex-start;
-  height: fit-content;
+
+  /* Sticky: stays in place while products scroll */
+  position: sticky;
+  top: 72px; /* 64px navbar + 8px breathing room */
+
+  /* Cap height to remaining viewport so all filters fit without page scroll */
+  max-height: calc(100vh - 88px);
+  overflow-y: auto;
+
+  /* Hide scrollbar visually but keep it functional as a last resort */
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
 }
 
+.filters::-webkit-scrollbar { width: 4px; }
+.filters::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 4px; }
+.filters::-webkit-scrollbar-track { background: transparent; }
+
 .filter-title {
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 700;
   color: var(--color-text);
-  margin: 0 0 16px;
-  padding-bottom: 12px;
+  margin: 0 0 10px;
+  padding-bottom: 8px;
   border-bottom: 1px solid var(--color-border);
 }
 
 .filter-section {
-  margin-bottom: 18px;
+  margin-bottom: 12px;
 }
 
 .filter-section h3 {
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--color-text-muted);
-  margin: 0 0 8px;
+  margin: 0 0 4px;
 }
 
 .filter-option {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 8px;
+  gap: 7px;
+  padding: 3px 6px;
   border-radius: var(--radius-sm);
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   color: var(--color-text);
   cursor: pointer;
   transition: background var(--transition);
-  margin-bottom: 2px;
+  margin-bottom: 1px;
 }
 
 .filter-option input[type="radio"] {
