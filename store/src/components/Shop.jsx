@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import useAuthStore from '../../useAuthStore';
 import { authFetch } from '../api';
-import { FaShoppingCart } from 'react-icons/fa';
+import { FaShoppingCart, FaStar, FaStarHalfAlt, FaRegStar } from 'react-icons/fa';
 import '../styles/shop.css';
 import { toast } from 'react-toastify';
 
@@ -9,7 +9,7 @@ const PRICE_LABELS = { '<5000': 'Under ₹5,000', '5000-10000': '₹5,000 – �
 const SORT_LABELS = { 'low-high': 'Price: Low → High', 'high-low': 'Price: High → Low' };
 
 const Shop = () => {
-  const { isLoggedIn, user } = useAuthStore();
+  const { isLoggedIn, user, setCartCount } = useAuthStore();
   const [bats, setBats] = useState([]);
   const [brands, setBrands] = useState([]);
   const [filters, setFilters] = useState({ brand: 'none', price: 'none', rating: 'none', sort: 'none' });
@@ -53,6 +53,9 @@ const Shop = () => {
         body: JSON.stringify({ ...bat, quantity: quantities[index] || 1 }),
       });
       if (!response.ok) throw new Error();
+      const updatedItems = await response.json();
+      setCartCount(updatedItems.length);
+      setQuantities(prev => ({ ...prev, [index]: 1 }));
       toast.success('Added to cart!');
     } catch {
       toast.error('Failed to add item to cart.');
@@ -87,7 +90,12 @@ const Shop = () => {
   const renderStars = (rating) => {
     const full = Math.floor(rating);
     const half = rating % 1 >= 0.5;
-    return '★'.repeat(full) + (half ? '½' : '') + '☆'.repeat(5 - full - (half ? 1 : 0));
+    const empty = 5 - full - (half ? 1 : 0);
+    return [
+      ...Array.from({ length: full },  (_, i) => <FaStar        key={`f${i}`} className="star filled" />),
+      ...(half                              ? [<FaStarHalfAlt key="h"    className="star filled" />] : []),
+      ...Array.from({ length: empty }, (_, i) => <FaRegStar     key={`e${i}`} className="star empty"  />),
+    ];
   };
 
   return (
@@ -163,7 +171,7 @@ const Shop = () => {
               <div className="bat-info">
                 <p className="bat-brand">{bat.name.toUpperCase()}</p>
                 <p className="bat-type">{bat.type}</p>
-                <p className="bat-stars">{renderStars(bat.rating)} <span>{bat.rating}</span></p>
+                <div className="bat-stars">{renderStars(bat.rating)}<span className="bat-rating-num">{bat.rating}</span></div>
                 <p className="bat-price">₹{bat.price.toLocaleString()}</p>
 
                 {user?.role !== 'admin' && (

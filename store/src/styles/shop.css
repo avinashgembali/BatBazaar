@@ -225,14 +225,28 @@
 }
 
 .bat-stars {
-  font-size: 0.82rem;
-  color: #f59e0b;
-  margin: 2px 0;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin: 4px 0;
 }
 
-.bat-stars span {
-  color: var(--color-text-muted);
+.bat-stars .star {
+  font-size: 0.85rem;
+}
+
+.bat-stars .star.filled {
+  color: #f59e0b;
+}
+
+.bat-stars .star.empty {
+  color: #d1d5db;
+}
+
+.bat-rating-num {
   font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
   margin-left: 4px;
 }
 

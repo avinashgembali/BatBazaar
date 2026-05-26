@@ -43,6 +43,7 @@ const App = () => {
         pauseOnHover
         theme="light"
         closeButton={false}
+        style={{ top: '72px' }}
       />
     </Router>
   );
