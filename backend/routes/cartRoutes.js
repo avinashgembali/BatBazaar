@@ -46,7 +46,7 @@ router.delete('/:email/:index', auth, async (req, res) => {
     }
     cart.items.splice(index, 1);
     await cart.save();
-    res.json(cart.items);
+    res.json(cart.items.map(item => ({ ...item.toObject(), imgUrl: item.img })));
   } catch (err) {
     res.status(500).json({ message: 'Failed to remove item' });
   }
