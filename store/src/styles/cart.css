@@ -206,7 +206,7 @@
   width: 100%;
   background: var(--color-success);
   color: white;
-  padding: 12px 20px;
+  padding: 13px 20px;
   border-radius: var(--radius-sm);
   font-size: 1rem;
   font-weight: 700;
@@ -217,12 +217,41 @@
   gap: 8px;
   justify-content: center;
   font-family: var(--font-base);
-  transition: background var(--transition), transform var(--transition);
+  transition: background var(--transition), transform var(--transition), opacity var(--transition);
 }
 
-.checkout-btn:hover {
+.checkout-btn:hover:not(:disabled) {
   background: var(--color-success-dark);
   transform: translateY(-1px);
+}
+
+.checkout-btn:disabled,
+.checkout-btn.paying {
+  opacity: 0.75;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Spinning loader inside the button */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: white;
+  border-radius: 50%;
+  display: inline-block;
+  animation: spin 0.7s linear infinite;
+}
+
+.razorpay-note {
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  margin: 10px 0 0;
 }
 
 @media (max-width: 600px) {
