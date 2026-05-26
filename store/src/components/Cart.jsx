@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import useAuthStore from '../../useAuthStore';
+import { authFetch } from '../api';
 import { FaShoppingCart, FaTrash } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import '../styles/cart.css';
@@ -13,7 +14,7 @@ const Cart = () => {
 
   useEffect(() => {
     if (!isLoggedIn) return;
-    fetch(`${import.meta.env.VITE_API_URL}/cart/${user.email}`)
+    authFetch(`${import.meta.env.VITE_API_URL}/cart/${user.email}`)
       .then(res => res.json())
       .then(data => { setCartItems(data); syncCount(data); })
       .catch(() => toast.error('Failed to fetch cart'))
@@ -22,7 +23,7 @@ const Cart = () => {
 
   const handleRemove = async (index) => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/cart/${user.email}/${index}`, { method: 'DELETE' });
+      const res = await authFetch(`${import.meta.env.VITE_API_URL}/cart/${user.email}/${index}`, { method: 'DELETE' });
       const updated = await res.json();
       setCartItems(updated);
       syncCount(updated);
@@ -34,9 +35,8 @@ const Cart = () => {
 
   const handlePlaceOrder = async () => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/orders/place`, {
+      const res = await authFetch(`${import.meta.env.VITE_API_URL}/orders/place`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: user.email, items: cartItems }),
       });
       if (!res.ok) throw new Error();

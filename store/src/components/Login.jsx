@@ -42,7 +42,7 @@ const Login = () => {
         credentials: 'include',
       });
       const data = await response.json();
-      if (response.ok) { useAuthStore.getState().login(data.user); toast.success('Login successful!'); window.location.href = '/'; }
+      if (response.ok) { useAuthStore.getState().login(data.user, data.token); toast.success('Login successful!'); window.location.href = '/'; }
       else toast.error(data.message || 'Invalid email or password');
     } catch { toast.error('Login failed. Please try again later.'); }
   };

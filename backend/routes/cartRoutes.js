@@ -1,27 +1,26 @@
 const express = require('express');
 const Cart = require('../models/cart');
 const Order = require('../models/order');
+const auth = require('../middleware/auth');
+
 const router = express.Router();
 
-// Get user's cart
-router.get('/:email', async (req, res) => {
+// All cart routes require a valid token (logged-in users only)
+
+router.get('/:email', auth, async (req, res) => {
   try {
     const cart = await Cart.findOne({ userEmail: req.params.email }) || { items: [] };
-
     const cartItemsWithImgUrl = cart.items.map(item => ({
       ...item.toObject(),
       imgUrl: item.img
     }));
-
     res.json(cartItemsWithImgUrl);
   } catch (err) {
-    console.error(err);
     res.status(500).json({ message: 'Failed to get cart' });
   }
 });
 
-// Add item to cart
-router.post('/:email', async (req, res) => {
+router.post('/:email', auth, async (req, res) => {
   try {
     const { email } = req.params;
     const item = req.body;
@@ -38,23 +37,19 @@ router.post('/:email', async (req, res) => {
   }
 });
 
-// Remove item from cart (by index)
-router.delete('/:email/:index', async (req, res) => {
+router.delete('/:email/:index', auth, async (req, res) => {
   try {
     const { email, index } = req.params;
     const cart = await Cart.findOne({ userEmail: email });
     if (!cart || index < 0 || index >= cart.items.length) {
       return res.status(404).json({ message: 'Item not found' });
     }
-
     cart.items.splice(index, 1);
     await cart.save();
-
     res.json(cart.items);
   } catch (err) {
     res.status(500).json({ message: 'Failed to remove item' });
   }
 });
-
 
 module.exports = router;

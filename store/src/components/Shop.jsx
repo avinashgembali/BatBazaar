@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import useAuthStore from '../../useAuthStore';
+import { authFetch } from '../api';
 import { FaShoppingCart } from 'react-icons/fa';
 import '../styles/shop.css';
 import { toast } from 'react-toastify';
@@ -47,9 +48,8 @@ const Shop = () => {
   const handleAddToCart = async (bat, index) => {
     if (!isLoggedIn || !user?.email) { toast.warn('Please login to add items to cart.'); return; }
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/cart/${user.email}`, {
+      const response = await authFetch(`${import.meta.env.VITE_API_URL}/cart/${user.email}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...bat, quantity: quantities[index] || 1 }),
       });
       if (!response.ok) throw new Error();

@@ -1,59 +1,46 @@
 const express = require('express');
 const Bat = require('../models/bat');
 const SoldBat = require('../models/soldBat');
-const router = express.Router();
-const multer = require('multer');
-const path = require('path');
 const Order = require('../models/order');
-
+const auth = require('../middleware/auth');
+const adminOnly = require('../middleware/adminOnly');
+const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 
-// Configure Cloudinary
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
   api_key: process.env.API_KEY,
   api_secret: process.env.API_SECRET,
 });
 
-// Configure Multer for memory storage
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-// Create Bat
-router.post('/bat', upload.single('img'), async (req, res) => {
+const router = express.Router();
+
+// All admin routes require: valid token (auth) + admin role (adminOnly)
+// The two middlewares run in order before the handler
+
+router.post('/bat', auth, adminOnly, upload.single('img'), async (req, res) => {
   try {
     const { name, type, brand, rating, price } = req.body;
     let imageUrl = '';
 
     if (req.file) {
-      
-      // Wrap cloudinary upload in a promise
       const uploadResult = await new Promise((resolve, reject) => {
         const stream = cloudinary.uploader.upload_stream(
           { folder: 'batbazaar' },
           (error, result) => {
-            if (error) {
-              console.error("Cloudinary upload error:", error);
-              return reject(error);
-            }
+            if (error) return reject(error);
             resolve(result);
           }
         );
         stream.end(req.file.buffer);
       });
-
       imageUrl = uploadResult.secure_url;
     }
 
-    const bat = new Bat({
-      name,
-      type,
-      brand,
-      rating,
-      price,
-      img: imageUrl || req.body.img, // fallback if needed
-    });
-
+    const bat = new Bat({ name, type, brand, rating, price, img: imageUrl || req.body.img });
     await bat.save();
     res.status(201).json(bat);
   } catch (err) {
@@ -61,8 +48,7 @@ router.post('/bat', upload.single('img'), async (req, res) => {
   }
 });
 
-// Delete Bat
-router.delete('/bat/:id', async (req, res) => {
+router.delete('/bat/:id', auth, adminOnly, async (req, res) => {
   try {
     await Bat.findByIdAndDelete(req.params.id);
     res.json({ message: 'Bat deleted' });
@@ -71,8 +57,7 @@ router.delete('/bat/:id', async (req, res) => {
   }
 });
 
-// View Sold Bats
-router.get('/sold', async (req, res) => {
+router.get('/sold', auth, adminOnly, async (req, res) => {
   try {
     const sold = await SoldBat.find().populate('batId');
     res.json(sold);
@@ -81,8 +66,7 @@ router.get('/sold', async (req, res) => {
   }
 });
 
-// Fetch all orders
-router.get('/orders', async (req, res) => {
+router.get('/orders', auth, adminOnly, async (req, res) => {
   try {
     const orders = await Order.find().sort({ orderDate: -1 });
     res.json(orders);
@@ -91,8 +75,7 @@ router.get('/orders', async (req, res) => {
   }
 });
 
-// Mark order as delivered and move to sold bats
-router.put('/orders/:id/deliver', async (req, res) => {
+router.put('/orders/:id/deliver', auth, adminOnly, async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
     if (!order) return res.status(404).json({ message: 'Order not found' });

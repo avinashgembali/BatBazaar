@@ -1,19 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import { authFetch } from '../../api';
 import '../../styles/AdminOrderAndSales.css';
 
 const AdminOrderAndSales = () => {
   const [orders, setOrders] = useState([]);
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL}/admin/orders`)
+    authFetch(`${import.meta.env.VITE_API_URL}/admin/orders`)
       .then(res => res.json())
       .then(setOrders);
   }, []);
 
   const handleDeliver = async (orderId) => {
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/admin/orders/${orderId}/deliver`, {
-      method: 'PUT'
-    });
+    const res = await authFetch(`${import.meta.env.VITE_API_URL}/admin/orders/${orderId}/deliver`, { method: 'PUT' });
     const updated = await res.json();
     setOrders(prev => prev.map(o => o._id === orderId ? updated.order : o));
   };
@@ -35,10 +34,7 @@ const AdminOrderAndSales = () => {
                 <li key={i}>{item.name} (x{item.quantity})</li>
               ))}
             </ul>
-            <button
-              className="status-btn pending"
-              onClick={() => handleDeliver(order._id)}
-            >
+            <button className="status-btn pending" onClick={() => handleDeliver(order._id)}>
               Mark as Delivered
             </button>
           </div>
