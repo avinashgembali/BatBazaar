@@ -323,10 +323,16 @@
   transition: background var(--transition), transform var(--transition), box-shadow var(--transition);
 }
 
-.add-to-cart:hover {
+.add-to-cart:hover:not(:disabled) {
   background: var(--color-primary-dark);
   transform: translateY(-1px);
   box-shadow: 0 4px 14px rgba(37,99,235,0.35);
+}
+
+.add-to-cart:disabled {
+  background: #cbd5e1;
+  box-shadow: none;
+  cursor: not-allowed;
 }
 
 /* ---------- Responsive ---------- */

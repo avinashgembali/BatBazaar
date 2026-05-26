@@ -27,7 +27,7 @@ const Shop = () => {
           errorShown.current = true;
         }
         setBats(data);
-        setQuantities(Object.fromEntries(data.map((_, i) => [i, 1])));
+        setQuantities(Object.fromEntries(data.map((_, i) => [i, 0])));
         setBrands([...new Set(data.map(b => b.name.toLowerCase()))].sort());
       })
       .catch(() => {
@@ -42,20 +42,21 @@ const Shop = () => {
   };
 
   const adjustQty = (index, delta) => {
-    setQuantities(prev => ({ ...prev, [index]: Math.max(1, (prev[index] || 1) + delta) }));
+    setQuantities(prev => ({ ...prev, [index]: Math.max(0, (prev[index] || 0) + delta) }));
   };
 
   const handleAddToCart = async (bat, index) => {
     if (!isLoggedIn || !user?.email) { toast.warn('Please login to add items to cart.'); return; }
+    if (!quantities[index] || quantities[index] < 1) { toast.warn('Select a quantity first.'); return; }
     try {
       const response = await authFetch(`${import.meta.env.VITE_API_URL}/cart/${user.email}`, {
         method: 'POST',
-        body: JSON.stringify({ ...bat, quantity: quantities[index] || 1 }),
+        body: JSON.stringify({ ...bat, quantity: quantities[index] }),
       });
       if (!response.ok) throw new Error();
       const updatedItems = await response.json();
       setCartCount(updatedItems.length);
-      setQuantities(prev => ({ ...prev, [index]: 1 }));
+      setQuantities(prev => ({ ...prev, [index]: 0 }));
       toast.success('Added to cart!');
     } catch {
       toast.error('Failed to add item to cart.');
@@ -92,9 +93,9 @@ const Shop = () => {
     const half = rating % 1 >= 0.5;
     const empty = 5 - full - (half ? 1 : 0);
     return [
-      ...Array.from({ length: full },  (_, i) => <FaStar        key={`f${i}`} className="star filled" />),
-      ...(half                              ? [<FaStarHalfAlt key="h"    className="star filled" />] : []),
-      ...Array.from({ length: empty }, (_, i) => <FaRegStar     key={`e${i}`} className="star empty"  />),
+      ...Array.from({ length: full }, (_, i) => <FaStar key={`f${i}`} className="star filled" />),
+      ...(half ? [<FaStarHalfAlt key="h" className="star filled" />] : []),
+      ...Array.from({ length: empty }, (_, i) => <FaRegStar key={`e${i}`} className="star empty" />),
     ];
   };
 
@@ -178,10 +179,14 @@ const Shop = () => {
                   <div className="bat-controls">
                     <div className="qty-stepper">
                       <button onClick={() => adjustQty(index, -1)}>−</button>
-                      <span>{quantities[index] || 1}</span>
+                      <span>{quantities[index]}</span>
                       <button onClick={() => adjustQty(index, 1)}>+</button>
                     </div>
-                    <button className="add-to-cart" onClick={() => handleAddToCart(bat, index)}>
+                    <button
+                      className="add-to-cart"
+                      onClick={() => handleAddToCart(bat, index)}
+                      disabled={!quantities[index]}
+                    >
                       <FaShoppingCart />
                     </button>
                   </div>
