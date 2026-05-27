@@ -1,5 +1,5 @@
 const SORT_OPTIONS = ['none', 'low-high', 'high-low'];
-const GEMINI_MODEL = 'gemini-2.5-flash';
+const GEMINI_MODEL = 'gemini-3.1-flash-lite';
 
 const geminiFetch = (prompt, temperature = 0) => {
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
