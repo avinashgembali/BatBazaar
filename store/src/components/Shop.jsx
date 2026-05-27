@@ -2,17 +2,23 @@ import { useEffect, useState, useRef } from 'react';
 import useAuthStore from '../../useAuthStore';
 import { authFetch } from '../api';
 import { FaShoppingCart, FaStar, FaStarHalfAlt, FaRegStar } from 'react-icons/fa';
+import AIChatbot from './AIChatbot';
 import '../styles/shop.css';
 import { toast } from 'react-toastify';
 
-const PRICE_LABELS = { '<5000': 'Under ₹5,000', '5000-10000': '₹5,000 – ₹10,000', '10000-15000': '₹10,000 – ₹15,000', '15000-20000': '₹15,000 – ₹20,000', '>20000': 'Above ₹20,000' };
 const SORT_LABELS = { 'low-high': 'Price: Low → High', 'high-low': 'Price: High → Low' };
 
 const Shop = () => {
   const { isLoggedIn, user, setCartCount } = useAuthStore();
   const [bats, setBats] = useState([]);
   const [brands, setBrands] = useState([]);
-  const [filters, setFilters] = useState({ brand: 'none', price: 'none', rating: 'none', sort: 'none' });
+  const [dataRange, setDataRange] = useState([0, 30000]);
+
+  const [selectedBrands, setSelectedBrands] = useState([]);
+  const [priceRange, setPriceRange] = useState([0, 30000]);
+  const [minRating, setMinRating] = useState(0);
+  const [sort, setSort] = useState('none');
+
   const [quantities, setQuantities] = useState({});
   const [loading, setLoading] = useState(true);
   const errorShown = useRef(false);
@@ -29,6 +35,13 @@ const Shop = () => {
         setBats(data);
         setQuantities(Object.fromEntries(data.map((_, i) => [i, 0])));
         setBrands([...new Set(data.map(b => b.name.toLowerCase()))].sort());
+        if (data.length > 0) {
+          const prices = data.map(b => b.price);
+          const cleanMin = Math.floor(Math.min(...prices) / 1000) * 1000;
+          const cleanMax = Math.min(Math.ceil(Math.max(...prices) / 1000) * 1000, 30000);
+          setDataRange([cleanMin, cleanMax]);
+          setPriceRange([cleanMin, cleanMax]);
+        }
       })
       .catch(() => {
         if (!errorShown.current) { toast.error('Failed to fetch bats.'); errorShown.current = true; }
@@ -36,13 +49,28 @@ const Shop = () => {
       .finally(() => setLoading(false));
   }, []);
 
-  const handleFilterChange = (e) => {
-    const { name, value } = e.target;
-    setFilters(prev => ({ ...prev, [name]: value }));
+  const toggleBrand = (brand) => {
+    setSelectedBrands(prev =>
+      prev.includes(brand) ? prev.filter(b => b !== brand) : [...prev, brand]
+    );
   };
 
   const adjustQty = (index, delta) => {
     setQuantities(prev => ({ ...prev, [index]: Math.max(0, (prev[index] || 0) + delta) }));
+  };
+
+  const clearFilters = () => {
+    setSelectedBrands([]);
+    setPriceRange(dataRange);
+    setMinRating(0);
+    setSort('none');
+  };
+
+  const applyAIFilters = ({ brands, priceRange: pr, minRating: mr, sort: s }) => {
+    setSelectedBrands(brands);
+    setPriceRange(pr);
+    setMinRating(mr);
+    setSort(s);
   };
 
   const handleAddToCart = async (bat, index) => {
@@ -64,29 +92,20 @@ const Shop = () => {
   };
 
   const filteredBats = bats.filter(b => {
-    const brandMatch = filters.brand === 'none' || b.name.toLowerCase() === filters.brand;
-    let priceMatch = true;
-    switch (filters.price) {
-      case '<5000': priceMatch = b.price < 5000; break;
-      case '5000-10000': priceMatch = b.price >= 5000 && b.price <= 10000; break;
-      case '10000-15000': priceMatch = b.price > 10000 && b.price <= 15000; break;
-      case '15000-20000': priceMatch = b.price > 15000 && b.price <= 20000; break;
-      case '>20000': priceMatch = b.price > 20000; break;
-    }
-    let ratingMatch = true;
-    switch (filters.rating) {
-      case '4.5+': ratingMatch = b.rating > 4.5; break;
-      case '4-4.5': ratingMatch = b.rating >= 4 && b.rating <= 4.5; break;
-      case '3.5-4': ratingMatch = b.rating >= 3.5 && b.rating <= 4; break;
-      case '3-3.5': ratingMatch = b.rating >= 3 && b.rating <= 3.5; break;
-      case '<3': ratingMatch = b.rating < 3; break;
-    }
+    const brandMatch = selectedBrands.length === 0 || selectedBrands.includes(b.name.toLowerCase());
+    const priceMatch = b.price >= priceRange[0] && b.price <= priceRange[1];
+    const ratingMatch = b.rating >= minRating;
     return brandMatch && priceMatch && ratingMatch;
   }).sort((a, b) => {
-    if (filters.sort === 'low-high') return a.price - b.price;
-    if (filters.sort === 'high-low') return b.price - a.price;
+    if (sort === 'low-high') return a.price - b.price;
+    if (sort === 'high-low') return b.price - a.price;
     return 0;
   });
+
+  const rangeSpan = dataRange[1] - dataRange[0] || 1;
+  const priceFillLeft = ((priceRange[0] - dataRange[0]) / rangeSpan) * 100;
+  const priceFillWidth = ((priceRange[1] - priceRange[0]) / rangeSpan) * 100;
+  const ratingFillWidth = (minRating / 5) * 100;
 
   const renderStars = (rating) => {
     const full = Math.floor(rating);
@@ -102,44 +121,71 @@ const Shop = () => {
   return (
     <div className="shop-container">
       <aside className="filters">
-        <h2 className="filter-title">Filters</h2>
+        <div className="filter-title-row">
+          <h2 className="filter-title">Filters</h2>
+          <button className="clear-all-btn" onClick={clearFilters}>Clear All</button>
+        </div>
 
         <div className="filter-section">
-          <h3>Brand</h3>
-          {['none', ...brands].map(brand => (
-            <label key={brand} className={`filter-option${filters.brand === brand ? ' selected' : ''}`}>
-              <input type="radio" name="brand" value={brand} checked={filters.brand === brand} onChange={handleFilterChange} />
-              {brand === 'none' ? 'All Brands' : brand.toUpperCase()}
+          <div className="filter-section-head">
+            <h3>Brand</h3>
+            {selectedBrands.length > 0 && (
+              <button className="clear-sel-btn" onClick={() => setSelectedBrands([])}>Clear</button>
+            )}
+          </div>
+          {brands.map(brand => (
+            <label key={brand} className={`checkbox-option${selectedBrands.includes(brand) ? ' selected' : ''}`}>
+              <input type="checkbox" checked={selectedBrands.includes(brand)} onChange={() => toggleBrand(brand)} />
+              {brand.toUpperCase()}
             </label>
           ))}
         </div>
 
         <div className="filter-section">
           <h3>Price</h3>
-          {['none', '<5000', '5000-10000', '10000-15000', '15000-20000', '>20000'].map(price => (
-            <label key={price} className={`filter-option${filters.price === price ? ' selected' : ''}`}>
-              <input type="radio" name="price" value={price} checked={filters.price === price} onChange={handleFilterChange} />
-              {price === 'none' ? 'Any Price' : PRICE_LABELS[price]}
-            </label>
-          ))}
+          <div className="slider-value-row">
+            <span className="slider-val">₹{priceRange[0].toLocaleString()}</span>
+            <span className="slider-sep">–</span>
+            <span className="slider-val">₹{priceRange[1].toLocaleString()}</span>
+          </div>
+          <div className="slider-wrap">
+            <div className="slider-track">
+              <div className="slider-track-fill" style={{ left: `${priceFillLeft}%`, width: `${priceFillWidth}%` }} />
+            </div>
+            <input type="range" className="dual-range" min={dataRange[0]} max={dataRange[1]} step={500}
+              value={priceRange[0]} style={{ zIndex: priceRange[0] >= priceRange[1] - 500 ? 5 : 3 }}
+              onChange={e => { const v = Math.min(Number(e.target.value), priceRange[1] - 500); setPriceRange(prev => [v, prev[1]]); }} />
+            <input type="range" className="dual-range" min={dataRange[0]} max={dataRange[1]} step={500}
+              value={priceRange[1]} style={{ zIndex: priceRange[0] >= priceRange[1] - 500 ? 3 : 5 }}
+              onChange={e => { const v = Math.max(Number(e.target.value), priceRange[0] + 500); setPriceRange(prev => [prev[0], v]); }} />
+          </div>
+          <div className="slider-bounds">
+            <span>₹{dataRange[0].toLocaleString()}</span>
+            <span>₹{dataRange[1].toLocaleString()}</span>
+          </div>
         </div>
 
         <div className="filter-section">
-          <h3>Rating</h3>
-          {['none', '4.5+', '4-4.5', '3.5-4', '3-3.5', '<3'].map(rate => (
-            <label key={rate} className={`filter-option${filters.rating === rate ? ' selected' : ''}`}>
-              <input type="radio" name="rating" value={rate} checked={filters.rating === rate} onChange={handleFilterChange} />
-              {rate === 'none' ? 'Any Rating' : `${rate} ⭐`}
-            </label>
-          ))}
+          <h3>Min Rating</h3>
+          <div className="slider-value-row">
+            <span className="slider-val">{minRating === 0 ? 'Any' : `${minRating.toFixed(2)} ⭐ & above`}</span>
+          </div>
+          <div className="slider-wrap">
+            <div className="slider-track">
+              <div className="slider-track-fill" style={{ left: 0, width: `${ratingFillWidth}%` }} />
+            </div>
+            <input type="range" className="dual-range" min={0} max={5} step={0.05}
+              value={minRating} style={{ zIndex: 5 }} onChange={e => setMinRating(Number(e.target.value))} />
+          </div>
+          <div className="slider-bounds"><span>0</span><span>5 ⭐</span></div>
         </div>
 
         <div className="filter-section">
           <h3>Sort</h3>
-          {['none', 'low-high', 'high-low'].map(sort => (
-            <label key={sort} className={`filter-option${filters.sort === sort ? ' selected' : ''}`}>
-              <input type="radio" name="sort" value={sort} checked={filters.sort === sort} onChange={handleFilterChange} />
-              {sort === 'none' ? 'Default' : SORT_LABELS[sort]}
+          {['none', 'low-high', 'high-low'].map(s => (
+            <label key={s} className={`filter-option${sort === s ? ' selected' : ''}`}>
+              <input type="radio" name="sort" value={s} checked={sort === s} onChange={e => setSort(e.target.value)} />
+              {s === 'none' ? 'Default' : SORT_LABELS[s]}
             </label>
           ))}
         </div>
@@ -159,43 +205,41 @@ const Shop = () => {
           <div className="no-results">
             <span>🔍</span>
             <p>No bats match your filters.</p>
-            <button onClick={() => setFilters({ brand: 'none', price: 'none', rating: 'none', sort: 'none' })}>
-              Clear Filters
-            </button>
+            <button onClick={clearFilters}>Clear Filters</button>
           </div>
         ) : (
-          filteredBats.map((bat, index) => (
-            <div className="bat-card" key={index}>
-              <div className="bat-img-wrapper">
-                <img src={bat.imgUrl} alt={`${bat.name} bat`} loading="lazy" />
-              </div>
-              <div className="bat-info">
-                <p className="bat-brand">{bat.name.toUpperCase()}</p>
-                <p className="bat-type">{bat.type}</p>
-                <div className="bat-stars">{renderStars(bat.rating)}<span className="bat-rating-num">{bat.rating}</span></div>
-                <p className="bat-price">₹{bat.price.toLocaleString()}</p>
-
-                {user?.role !== 'admin' && (
-                  <div className="bat-controls">
-                    <div className="qty-stepper">
-                      <button onClick={() => adjustQty(index, -1)}>−</button>
-                      <span>{quantities[index]}</span>
-                      <button onClick={() => adjustQty(index, 1)}>+</button>
+          filteredBats.map(bat => {
+            const origIdx = bats.indexOf(bat);
+            return (
+              <div className="bat-card" key={origIdx}>
+                <div className="bat-img-wrapper">
+                  <img src={bat.imgUrl} alt={`${bat.name} bat`} loading="lazy" />
+                </div>
+                <div className="bat-info">
+                  <p className="bat-brand">{bat.name.toUpperCase()}</p>
+                  <p className="bat-type">{bat.type}</p>
+                  <div className="bat-stars">{renderStars(bat.rating)}<span className="bat-rating-num">{bat.rating}</span></div>
+                  <p className="bat-price">₹{bat.price.toLocaleString()}</p>
+                  {user?.role !== 'admin' && (
+                    <div className="bat-controls">
+                      <div className="qty-stepper">
+                        <button onClick={() => adjustQty(origIdx, -1)}>−</button>
+                        <span>{quantities[origIdx] || 0}</span>
+                        <button onClick={() => adjustQty(origIdx, 1)}>+</button>
+                      </div>
+                      <button className="add-to-cart" onClick={() => handleAddToCart(bat, origIdx)} disabled={!quantities[origIdx]}>
+                        <FaShoppingCart />
+                      </button>
                     </div>
-                    <button
-                      className="add-to-cart"
-                      onClick={() => handleAddToCart(bat, index)}
-                      disabled={!quantities[index]}
-                    >
-                      <FaShoppingCart />
-                    </button>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
+
+      <AIChatbot bats={bats} brands={brands} dataRange={dataRange} onApplyFilters={applyAIFilters} />
     </div>
   );
 };

@@ -1,15 +1,26 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import useAuthStore from '../../useAuthStore';
 import { authFetch } from '../api';
 import { FaShoppingCart, FaTrash } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import '../styles/cart.css';
 
+const loadRazorpay = () =>
+  new Promise((resolve) => {
+    if (window.Razorpay) { resolve(true); return; }
+    const s = document.createElement('script');
+    s.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    s.onload = () => resolve(true);
+    s.onerror = () => resolve(false);
+    document.body.appendChild(s);
+  });
+
 const Cart = () => {
   const { user, isLoggedIn, setCartCount } = useAuthStore();
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [paying, setPaying] = useState(false); // true while Razorpay popup is open
+  const [paying, setPaying] = useState(false);
+  const rzpRef = useRef(null);
 
   const syncCount = (items) => setCartCount(items.length);
 
@@ -43,14 +54,14 @@ const Cart = () => {
   // Step 3: User pays with test card → Razorpay gives us payment proof
   // Step 4: Send proof to our backend → backend verifies → saves order to DB
   const handlePayNow = async () => {
-    // Guard: Razorpay script must be loaded (from index.html CDN script)
-    if (!window.Razorpay) {
-      toast.error('Payment service not loaded. Please refresh the page.');
-      return;
-    }
-
     setPaying(true);
     try {
+      const loaded = await loadRazorpay();
+      if (!loaded || !window.Razorpay) {
+        toast.error('Payment service failed to load. Please refresh.');
+        setPaying(false);
+        return;
+      }
       // Step 1 — create Razorpay order on our backend
       const orderRes = await authFetch(
         `${import.meta.env.VITE_API_URL}/orders/create-razorpay-order`,
@@ -134,15 +145,12 @@ const Cart = () => {
         },
       };
 
-      const rzp = new window.Razorpay(options);
-
-      // Called if payment fails inside the popup (wrong card, insufficient funds, etc.)
-      rzp.on('payment.failed', () => {
+      rzpRef.current = new window.Razorpay(options);
+      rzpRef.current.on('payment.failed', () => {
         setPaying(false);
         toast.error('Payment failed. Please try again.');
       });
-
-      rzp.open();
+      rzpRef.current.open();
     } catch (err) {
       setPaying(false);
       console.error('[Razorpay] Payment error:', err);
