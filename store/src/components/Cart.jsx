@@ -16,35 +16,101 @@ const loadRazorpay = () =>
   });
 
 const Cart = () => {
-  const { user, isLoggedIn, setCartCount } = useAuthStore();
-  const [cartItems, setCartItems] = useState([]);
+  const { user, isLoggedIn, cartItems, setCartItems } = useAuthStore();
   const [loading, setLoading] = useState(true);
   const [paying, setPaying] = useState(false);
+  const [cartLoadingIds, setCartLoadingIds] = useState(new Set());
   const rzpRef = useRef(null);
 
-  const syncCount = (items) => setCartCount(items.length);
+  const setLoadingId = (id, on) =>
+    setCartLoadingIds(prev => { const s = new Set(prev); on ? s.add(id) : s.delete(id); return s; });
 
   useEffect(() => {
-    if (!isLoggedIn) return;
+    if (!isLoggedIn) { setLoading(false); return; }
     authFetch(`${import.meta.env.VITE_API_URL}/cart/${user.email}`)
       .then(res => res.json())
-      .then(data => { setCartItems(data); syncCount(data); })
+      .then(data => setCartItems(Array.isArray(data) ? data : []))
       .catch(() => toast.error('Failed to fetch cart'))
       .finally(() => setLoading(false));
-  }, [isLoggedIn, user]);
+  }, [isLoggedIn, user?.email]);
 
-  const handleRemove = async (index) => {
+  const increaseQtyCart = async (item) => {
+    const itemKey = item._id?.toString();
+    if (cartLoadingIds.has(itemKey)) return;
+    const prevItems = cartItems;
+    setCartItems(cartItems.map(ci =>
+      ci._id?.toString() === itemKey ? { ...ci, quantity: (ci.quantity || 1) + 1 } : ci
+    ));
+    setLoadingId(itemKey, true);
+    try {
+      const res = await authFetch(`${import.meta.env.VITE_API_URL}/cart/${user.email}`, {
+        method: 'POST',
+        body: JSON.stringify({
+          productId: item.productId,
+          name: item.name,
+          type: item.type,
+          price: item.price,
+          rating: item.rating,
+          img: item.imgUrl || item.img,
+          quantity: 1,
+        }),
+      });
+      if (!res.ok) throw new Error();
+      setCartItems(await res.json());
+    } catch {
+      setCartItems(prevItems);
+      toast.error('Failed to update cart.');
+    } finally {
+      setLoadingId(itemKey, false);
+    }
+  };
+
+  const decreaseQtyCart = async (item) => {
+    const itemKey = item._id?.toString();
+    if (cartLoadingIds.has(itemKey)) return;
+    const currentQty = item.quantity || 1;
+    const newQty = currentQty - 1;
+    const prevItems = cartItems;
+    const lookupId = item.productId || item._id;
+    if (newQty === 0) {
+      setCartItems(cartItems.filter(ci => ci._id?.toString() !== itemKey));
+    } else {
+      setCartItems(cartItems.map(ci =>
+        ci._id?.toString() === itemKey ? { ...ci, quantity: newQty } : ci
+      ));
+    }
+    setLoadingId(itemKey, true);
+    try {
+      const url = `${import.meta.env.VITE_API_URL}/cart/${user.email}/${lookupId}`;
+      const res = newQty === 0
+        ? await authFetch(url, { method: 'DELETE' })
+        : await authFetch(url, { method: 'PATCH', body: JSON.stringify({ quantity: newQty }) });
+      if (!res.ok) throw new Error();
+      setCartItems(await res.json());
+      if (newQty === 0) toast.success('Item removed from cart.');
+    } catch {
+      setCartItems(prevItems);
+      toast.error('Failed to update cart.');
+    } finally {
+      setLoadingId(itemKey, false);
+    }
+  };
+
+  const handleRemove = async (item) => {
+    const lookupId = item.productId || item._id;
+    const prevItems = cartItems;
+    setCartItems(cartItems.filter(ci => ci._id?.toString() !== item._id?.toString()));
     try {
       const res = await authFetch(
-        `${import.meta.env.VITE_API_URL}/cart/${user.email}/${index}`,
+        `${import.meta.env.VITE_API_URL}/cart/${user.email}/${lookupId}`,
         { method: 'DELETE' }
       );
-      const updated = await res.json();
-      setCartItems(updated);
-      syncCount(updated);
-      toast.success('Item removed from cart');
+      if (!res.ok) throw new Error();
+      setCartItems(await res.json());
+      toast.success('Item removed from cart.');
     } catch {
-      toast.error('Failed to remove item');
+      setCartItems(prevItems);
+      toast.error('Failed to remove item.');
     }
   };
 
@@ -127,7 +193,6 @@ const Cart = () => {
 
             // Success — clear cart UI
             setCartItems([]);
-            syncCount([]);
             toast.success('Payment successful! Order placed.');
           } catch {
             toast.error('Payment received but order save failed. Contact support.');
@@ -191,21 +256,35 @@ const Cart = () => {
       ) : (
         <>
           <div className="cart-container">
-            {cartItems.map((item, index) => (
-              <div key={index} className="cart-card">
-                <img src={item.imgUrl} alt={item.name} className="cart-img" />
-                <div className="cart-info">
-                  <p className="cart-item-name">{item.name}</p>
-                  <p className="cart-item-sub">{item.type}</p>
-                  <p className="cart-item-sub">⭐ {item.rating}</p>
-                  <p className="cart-item-price">₹{item.price.toLocaleString()}</p>
-                  <p className="cart-item-sub">Qty: {item.quantity || 1}</p>
-                  <button className="remove-from-cart" onClick={() => handleRemove(index)}>
-                    <FaTrash /> Remove
-                  </button>
+            {cartItems.map((item) => {
+              const itemKey = item._id?.toString();
+              const isUpdating = cartLoadingIds.has(itemKey);
+              return (
+                <div key={itemKey} className="cart-card">
+                  <img src={item.imgUrl} alt={item.name} className="cart-img" />
+                  <div className="cart-info">
+                    <p className="cart-item-name">{item.name}</p>
+                    <p className="cart-item-sub">{item.type}</p>
+                    <p className="cart-item-sub">⭐ {item.rating}</p>
+                    <p className="cart-item-price">₹{item.price.toLocaleString()}</p>
+                    <div className="cart-item-actions">
+                      <div className="cart-stepper">
+                        <button className="cart-stepper-btn" onClick={() => decreaseQtyCart(item)} aria-label="Decrease">−</button>
+                        <span className="cart-stepper-count">
+                          {isUpdating
+                            ? <span className="cart-stepper-dot" />
+                            : <span key={item.quantity} className="stepper-num">{item.quantity || 1}</span>}
+                        </span>
+                        <button className="cart-stepper-btn" onClick={() => increaseQtyCart(item)} aria-label="Increase">+</button>
+                      </div>
+                      <button className="cart-remove-icon" onClick={() => handleRemove(item)} title="Remove item" aria-label="Remove">
+                        <FaTrash />
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="cart-summary">

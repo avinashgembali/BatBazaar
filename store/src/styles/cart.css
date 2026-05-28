@@ -142,27 +142,104 @@
   margin: 4px 0;
 }
 
-.remove-from-cart {
-  margin-top: 8px;
-  background: transparent;
-  color: var(--color-danger);
-  border: 1.5px solid var(--color-danger);
-  padding: 6px 12px;
-  font-size: 0.82rem;
-  font-weight: 600;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
+/* ---------- Cart item actions row ---------- */
+.cart-item-actions {
   display: flex;
   align-items: center;
-  gap: 6px;
-  width: fit-content;
-  font-family: var(--font-base);
-  transition: background var(--transition), color var(--transition);
+  justify-content: space-between;
+  margin-top: 10px;
+  gap: 8px;
 }
 
-.remove-from-cart:hover {
-  background: var(--color-danger);
-  color: white;
+/* ---------- Cart stepper ---------- */
+.cart-stepper {
+  display: flex;
+  align-items: center;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.cart-stepper-btn {
+  width: 30px;
+  height: 30px;
+  background: #f1f5f9;
+  border: none;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  color: var(--color-text);
+  font-family: var(--font-base);
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--transition), color var(--transition);
+  flex-shrink: 0;
+}
+
+.cart-stepper-btn:hover {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.cart-stepper-count {
+  min-width: 32px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  background: var(--color-primary-light);
+  border-left: 1px solid var(--color-border);
+  border-right: 1px solid var(--color-border);
+}
+
+.cart-stepper-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  display: inline-block;
+  animation: stepper-pulse 0.8s ease-in-out infinite;
+}
+
+@keyframes stepper-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.35; transform: scale(0.65); }
+}
+
+/* Shared animated number (also used by shop stepper) */
+.stepper-num {
+  display: inline-block;
+  animation: stepper-slide-in 0.18s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+@keyframes stepper-slide-in {
+  from { opacity: 0; transform: translateY(6px) scale(0.75); }
+  to   { opacity: 1; transform: translateY(0)   scale(1);    }
+}
+
+/* ---------- Trash icon button ---------- */
+.cart-remove-icon {
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.88rem;
+  transition: color var(--transition), background var(--transition);
+}
+
+.cart-remove-icon:hover {
+  color: var(--color-danger);
+  background: #fee2e2;
 }
 
 /* ---------- Summary ---------- */

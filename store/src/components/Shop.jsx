@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import useAuthStore from '../../useAuthStore';
 import { authFetch } from '../api';
-import { FaShoppingCart, FaStar, FaStarHalfAlt, FaRegStar } from 'react-icons/fa';
+import { FaStar, FaStarHalfAlt, FaRegStar, FaShoppingCart } from 'react-icons/fa';
 import AIChatbot from './AIChatbot';
 import '../styles/shop.css';
 import { toast } from 'react-toastify';
@@ -9,7 +9,7 @@ import { toast } from 'react-toastify';
 const SORT_LABELS = { 'low-high': 'Price: Low → High', 'high-low': 'Price: High → Low' };
 
 const Shop = () => {
-  const { isLoggedIn, user, setCartCount } = useAuthStore();
+  const { isLoggedIn, user, cartItems, setCartItems } = useAuthStore();
   const [bats, setBats] = useState([]);
   const [brands, setBrands] = useState([]);
   const [dataRange, setDataRange] = useState([0, 30000]);
@@ -19,10 +19,12 @@ const Shop = () => {
   const [minRating, setMinRating] = useState(0);
   const [sort, setSort] = useState('none');
 
-  const [quantities, setQuantities] = useState({});
   const [loading, setLoading] = useState(true);
+  // Set of bat._id strings currently being synced to backend
+  const [cartLoadingIds, setCartLoadingIds] = useState(new Set());
   const errorShown = useRef(false);
 
+  // Fetch bats
   useEffect(() => {
     setLoading(true);
     fetch(`${import.meta.env.VITE_API_URL}/bats/bat`)
@@ -33,7 +35,6 @@ const Shop = () => {
           errorShown.current = true;
         }
         setBats(data);
-        setQuantities(Object.fromEntries(data.map((_, i) => [i, 0])));
         setBrands([...new Set(data.map(b => b.name.toLowerCase()))].sort());
         if (data.length > 0) {
           const prices = data.map(b => b.price);
@@ -49,46 +50,96 @@ const Shop = () => {
       .finally(() => setLoading(false));
   }, []);
 
-  const toggleBrand = (brand) => {
-    setSelectedBrands(prev =>
-      prev.includes(brand) ? prev.filter(b => b !== brand) : [...prev, brand]
-    );
+  // Fetch cart on mount so product cards show correct quantities
+  useEffect(() => {
+    if (!isLoggedIn || !user?.email) return;
+    authFetch(`${import.meta.env.VITE_API_URL}/cart/${user.email}`)
+      .then(r => r.json())
+      .then(data => setCartItems(Array.isArray(data) ? data : []))
+      .catch(() => {});
+  }, [isLoggedIn, user?.email]);
+
+  // ── Cart helpers ────────────────────────────────────────────────────────────
+  const getCartQty = (bat) => {
+    const found = cartItems.find(ci => ci.productId?.toString() === bat._id?.toString());
+    return found?.quantity || 0;
   };
 
-  const adjustQty = (index, delta) => {
-    setQuantities(prev => ({ ...prev, [index]: Math.max(0, (prev[index] || 0) + delta) }));
+  const setLoadingId = (id, on) =>
+    setCartLoadingIds(prev => { const s = new Set(prev); on ? s.add(id) : s.delete(id); return s; });
+
+  const increaseQty = async (bat) => {
+    if (!isLoggedIn) { toast.warn('Please login to add items to cart.'); return; }
+    const batId = bat._id?.toString();
+    if (cartLoadingIds.has(batId)) return;
+
+    const currentQty = getCartQty(bat);
+    const prevItems = cartItems;
+
+    // Optimistic update
+    const optimistic = currentQty > 0
+      ? cartItems.map(ci => ci.productId?.toString() === batId ? { ...ci, quantity: currentQty + 1 } : ci)
+      : [...cartItems, { productId: bat._id, name: bat.name, type: bat.type, price: bat.price, rating: bat.rating, imgUrl: bat.imgUrl, quantity: 1 }];
+    setCartItems(optimistic);
+    setLoadingId(batId, true);
+
+    try {
+      // Always POST — backend atomically increments if item exists, inserts if new
+      const res = await authFetch(`${import.meta.env.VITE_API_URL}/cart/${user.email}`, {
+        method: 'POST',
+        body: JSON.stringify({ productId: bat._id, name: bat.name, type: bat.type, price: bat.price, rating: bat.rating, img: bat.imgUrl, quantity: 1 }),
+      });
+      if (!res.ok) throw new Error();
+      setCartItems(await res.json());
+      if (currentQty === 0) toast.success(`${bat.name.toUpperCase()} added to cart!`);
+    } catch {
+      setCartItems(prevItems);
+      toast.error('Failed to update cart.');
+    } finally {
+      setLoadingId(batId, false);
+    }
   };
 
-  const clearFilters = () => {
-    setSelectedBrands([]);
-    setPriceRange(dataRange);
-    setMinRating(0);
-    setSort('none');
+  const decreaseQty = async (bat) => {
+    if (!isLoggedIn) return;
+    const batId = bat._id?.toString();
+    if (cartLoadingIds.has(batId)) return;
+    const currentQty = getCartQty(bat);
+    if (currentQty <= 0) return;
+
+    const prevItems = cartItems;
+    const newQty = currentQty - 1;
+
+    // Optimistic update
+    const optimistic = newQty === 0
+      ? cartItems.filter(ci => ci.productId?.toString() !== batId)
+      : cartItems.map(ci => ci.productId?.toString() === batId ? { ...ci, quantity: newQty } : ci);
+    setCartItems(optimistic);
+    setLoadingId(batId, true);
+
+    try {
+      const url = `${import.meta.env.VITE_API_URL}/cart/${user.email}/${bat._id}`;
+      const res = newQty === 0
+        ? await authFetch(url, { method: 'DELETE' })
+        : await authFetch(url, { method: 'PATCH', body: JSON.stringify({ quantity: newQty }) });
+      if (!res.ok) throw new Error();
+      setCartItems(await res.json());
+    } catch {
+      setCartItems(prevItems);
+      toast.error('Failed to update cart.');
+    } finally {
+      setLoadingId(batId, false);
+    }
   };
+
+  // ── Filters ─────────────────────────────────────────────────────────────────
+  const toggleBrand = (brand) =>
+    setSelectedBrands(prev => prev.includes(brand) ? prev.filter(b => b !== brand) : [...prev, brand]);
+
+  const clearFilters = () => { setSelectedBrands([]); setPriceRange(dataRange); setMinRating(0); setSort('none'); };
 
   const applyAIFilters = ({ brands, priceRange: pr, minRating: mr, sort: s }) => {
-    setSelectedBrands(brands);
-    setPriceRange(pr);
-    setMinRating(mr);
-    setSort(s);
-  };
-
-  const handleAddToCart = async (bat, index) => {
-    if (!isLoggedIn || !user?.email) { toast.warn('Please login to add items to cart.'); return; }
-    if (!quantities[index] || quantities[index] < 1) { toast.warn('Select a quantity first.'); return; }
-    try {
-      const response = await authFetch(`${import.meta.env.VITE_API_URL}/cart/${user.email}`, {
-        method: 'POST',
-        body: JSON.stringify({ ...bat, quantity: quantities[index] }),
-      });
-      if (!response.ok) throw new Error();
-      const updatedItems = await response.json();
-      setCartCount(updatedItems.length);
-      setQuantities(prev => ({ ...prev, [index]: 0 }));
-      toast.success('Added to cart!');
-    } catch {
-      toast.error('Failed to add item to cart.');
-    }
+    setSelectedBrands(brands); setPriceRange(pr); setMinRating(mr); setSort(s);
   };
 
   const filteredBats = bats.filter(b => {
@@ -209,28 +260,49 @@ const Shop = () => {
           </div>
         ) : (
           filteredBats.map(bat => {
-            const origIdx = bats.indexOf(bat);
+            const qty = getCartQty(bat);
+            const isUpdating = cartLoadingIds.has(bat._id?.toString());
             return (
-              <div className="bat-card" key={origIdx}>
+              <div className="bat-card" key={bat._id?.toString()}>
                 <div className="bat-img-wrapper">
                   <img src={bat.imgUrl} alt={`${bat.name} bat`} loading="lazy" />
+                  {qty > 0 && <span className="cart-qty-badge">{qty}</span>}
                 </div>
                 <div className="bat-info">
                   <p className="bat-brand">{bat.name.toUpperCase()}</p>
                   <p className="bat-type">{bat.type}</p>
                   <div className="bat-stars">{renderStars(bat.rating)}<span className="bat-rating-num">{bat.rating}</span></div>
                   <p className="bat-price">₹{bat.price.toLocaleString()}</p>
+
                   {user?.role !== 'admin' && (
-                    <div className="bat-controls">
-                      <div className="qty-stepper">
-                        <button onClick={() => adjustQty(origIdx, -1)}>−</button>
-                        <span>{quantities[origIdx] || 0}</span>
-                        <button onClick={() => adjustQty(origIdx, 1)}>+</button>
-                      </div>
-                      <button className="add-to-cart" onClick={() => handleAddToCart(bat, origIdx)} disabled={!quantities[origIdx]}>
-                        <FaShoppingCart />
+                    qty === 0 ? (
+                      <button
+                        className="add-to-cart-btn"
+                        onClick={() => increaseQty(bat)}
+                        disabled={isUpdating}
+                        aria-label="Add to cart"
+                      >
+                        {isUpdating ? <span className="stepper-dot" /> : <FaShoppingCart />}
                       </button>
-                    </div>
+                    ) : (
+                      <div className="bat-cart-stepper">
+                        <button
+                          className="stepper-btn"
+                          onClick={() => decreaseQty(bat)}
+                          aria-label="Decrease quantity"
+                        >−</button>
+                        <span className="stepper-count in-cart">
+                          {isUpdating
+                            ? <span className="stepper-dot" />
+                            : <span key={qty} className="stepper-num">{qty}</span>}
+                        </span>
+                        <button
+                          className="stepper-btn"
+                          onClick={() => increaseQty(bat)}
+                          aria-label="Increase quantity"
+                        >+</button>
+                      </div>
+                    )
                   )}
                 </div>
               </div>
