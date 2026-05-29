@@ -75,3 +75,11 @@
   color: #475569;
   font-size: 0.8rem;
 }
+
+@media (max-width: 480px) {
+  .footer { padding: 28px 16px 20px; }
+  .footer-brand { font-size: 1rem; }
+  .footer-nav a { padding: 4px 8px; font-size: 0.82rem; }
+  .footer-sep { display: none; }
+  .footer-copy { font-size: 0.72rem; text-align: center; }
+}

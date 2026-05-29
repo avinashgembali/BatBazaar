@@ -781,15 +781,53 @@ input.dual-range::-moz-range-thumb {
 
 /* ---------- Responsive ---------- */
 @media (max-width: 1024px) {
-  .shop-container { flex-direction: column; align-items: center; }
-  .filters { width: 100%; max-width: 520px; position: static; }
+  .shop-container { flex-direction: column; align-items: center; padding: 16px; }
+  .filters { width: 100%; max-width: 520px; position: static; max-height: none; }
   .bats-grid { justify-content: center; }
 }
 
 @media (max-width: 768px) {
   .bat-card { width: calc(50% - 10px); }
+  .pagination { gap: 4px; }
+  .pagination-btn { padding: 6px 10px; font-size: 0.78rem; }
+  .pagination-num { width: 30px; height: 30px; font-size: 0.78rem; }
 }
 
+/* Mobile: 2-column grid so 4 cards fill the screen */
 @media (max-width: 480px) {
-  .bat-card { width: 100%; }
+  .shop-container { padding: 10px; }
+  .bats-grid { gap: 10px; }
+  .bat-card { width: calc(50% - 5px); }
+
+  /* Compact card content */
+  .bat-info { padding: 8px; gap: 1px; }
+  .bat-brand { font-size: 0.65rem; letter-spacing: 0.04em; }
+  .bat-type  { font-size: 0.75rem; }
+  .bat-stars .star { font-size: 0.72rem; }
+  .bat-rating-num { font-size: 0.65rem; }
+  .bat-price { font-size: 0.88rem; margin: 2px 0 4px; }
+
+  /* Cart icon button */
+  .add-to-cart-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 0.8rem;
+    margin-top: 2px;
+  }
+  .add-to-cart-btn.sold-out {
+    height: 24px;
+    font-size: 0.58rem;
+    padding: 0 6px;
+    border-radius: 4px;
+  }
+
+  /* In-card quantity stepper */
+  .bat-cart-stepper { margin-top: 2px; }
+  .stepper-btn { width: 24px; height: 24px; font-size: 0.88rem; }
+  .stepper-count { min-width: 26px; height: 24px; font-size: 0.75rem; }
+
+  .no-results span { font-size: 2rem; }
+  .pagination { padding: 6px 0 2px; }
+  .pagination-btn { padding: 5px 8px; font-size: 0.75rem; }
+  .pagination-num { width: 28px; height: 28px; font-size: 0.75rem; }
 }

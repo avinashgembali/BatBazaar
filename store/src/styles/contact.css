@@ -46,5 +46,10 @@
 
 @media (max-width: 600px) {
   .contact-info { margin: 1rem; padding: 1rem; }
-  .contact-page h1 { font-size: 1.6rem; }
+  .contact-page h1 { font-size: 1.6rem; margin-top: 1.2rem; }
+}
+
+@media (max-width: 400px) {
+  .contact-page h1 { font-size: 1.3rem; }
+  .contact-info li { font-size: 0.88rem; padding: 8px 10px; }
 }

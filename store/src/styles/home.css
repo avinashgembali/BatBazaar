@@ -211,7 +211,24 @@
 /* ---------- Responsive ---------- */
 @media (max-width: 768px) {
   .hero-section { padding: 40px 24px; gap: 32px; min-height: auto; }
-  .hero-img img { width: 240px; height: 240px; }
+  .hero-img img { width: 220px; height: 220px; }
   .hero-quote { font-size: 2.2rem; }
   .hero-stats { gap: 14px; }
+  .admin-home { padding: 32px 20px; }
+  .admin-card { width: 100%; max-width: 340px; }
+}
+
+@media (max-width: 480px) {
+  .hero-section { padding: 28px 16px; gap: 24px; }
+  .hero-img img { width: 170px; height: 170px; border-width: 4px; }
+  .hero-quote { font-size: 1.7rem; letter-spacing: -0.5px; }
+  .hero-sub { font-size: 0.9rem; margin-bottom: 20px; }
+  .hero-cta, .hero-secondary { padding: 11px 20px; font-size: 0.9rem; }
+  .hero-actions { gap: 8px; margin-bottom: 24px; }
+  .stat strong { font-size: 1.1rem; }
+  .stat span { font-size: 0.68rem; }
+  .hero-stats { gap: 10px; }
+  .stat-divider { height: 24px; }
+  .admin-home h1 { font-size: 1.5rem; }
+  .admin-options { gap: 14px; }
 }

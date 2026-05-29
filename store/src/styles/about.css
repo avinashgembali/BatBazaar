@@ -132,9 +132,20 @@
 
 /* ---------- Responsive ---------- */
 @media (max-width: 768px) {
+  .about-page { padding: 0 16px 40px; }
+  .about-hero { padding: 36px 16px 28px; }
   .about-hero h1 { font-size: 1.8rem; }
   .about-row, .about-row.reverse { flex-direction: column; gap: 24px; }
   .about-row img { width: 100%; height: 220px; }
   .about-stat-divider { display: none; }
-  .about-stats { gap: 20px; }
+  .about-stats { gap: 20px; padding: 18px 20px; }
+}
+
+@media (max-width: 480px) {
+  .about-hero h1 { font-size: 1.5rem; }
+  .about-hero p { font-size: 0.9rem; }
+  .about-stat strong { font-size: 1.4rem; }
+  .about-row { padding: 32px 0; }
+  .about-text h2 { font-size: 1.2rem; }
+  .about-stats { margin-bottom: 32px; }
 }

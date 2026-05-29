@@ -1,5 +1,5 @@
 .admin-manage {
-  padding: 2rem;
+  padding: 1.5rem;
   font-family: 'Segoe UI', sans-serif;
   max-width: 1200px;
   margin: auto;
@@ -182,4 +182,32 @@
 
 .delete-btn:hover {
   background-color: #b91c1c;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 768px) {
+  .admin-manage { padding: 1rem; }
+  .admin-manage h2 { font-size: 1.5rem; margin-bottom: 1.2rem; }
+  .bat-form { padding: 14px; gap: 8px; }
+  .bat-cards-container { gap: 14px; }
+  .bat-card { width: calc(50% - 7px); }
+}
+
+/* Mobile: 2-column compact cards */
+@media (max-width: 480px) {
+  .admin-manage { padding: 10px; }
+  .bat-cards-container { gap: 10px; }
+  .bat-card { width: calc(50% - 5px); }
+  .bat-img-admin-wrapper img { height: 130px; }
+  .bat-info { padding: 8px; font-size: 12px; }
+  .bat-info p { margin: 4px 0; }
+  .stock-edit-row { gap: 4px; }
+  .stock-input { width: 56px; padding: 4px 6px; font-size: 0.78rem; }
+  .stock-update-btn { padding: 4px 8px; font-size: 0.75rem; }
+  .delete-btn { padding: 6px 10px; font-size: 0.78rem; }
+  .bat-form input { flex: 1 1 100%; }
+}
+
+@media (max-width: 400px) {
+  .admin-manage h2 { font-size: 1.2rem; }
 }

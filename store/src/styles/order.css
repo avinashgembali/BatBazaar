@@ -191,7 +191,19 @@
 .item-sub  { font-size: 0.8rem; color: var(--color-text-muted); margin: 0 0 2px; }
 .item-price { font-size: 0.85rem; font-weight: 600; color: var(--color-primary); margin: 0; }
 
+@media (max-width: 600px) {
+  .order-card { padding: 16px; }
+  .order-card-header { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .order-item { flex-wrap: wrap; }
+  .order-page h1 { font-size: 1.3rem; }
+}
+
 @media (max-width: 480px) {
-  .order-page { padding: 20px 14px; }
-  .stepper-label { font-size: 0.65rem; }
+  .order-page { padding: 16px 12px; }
+  .stepper-label { font-size: 0.62rem; white-space: normal; text-align: center; }
+  .stepper-dot { width: 24px; height: 24px; font-size: 0.65rem; }
+  .stepper-line { top: 12px; }
+  .order-item img { width: 52px; height: 52px; }
+  .item-name { font-size: 0.85rem; }
+  .status-badge { padding: 4px 10px; font-size: 0.72rem; }
 }

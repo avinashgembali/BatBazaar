@@ -3,11 +3,13 @@
   gap: 2rem;
   padding: 20px;
   font-family: 'Segoe UI', sans-serif;
+  flex-wrap: wrap;
 }
 
 .orders-section,
 .sales-section {
-  flex: 1;
+  flex: 1 1 280px; /* wrap when viewport too narrow to fit two at 280px */
+  min-width: 0;
 }
 
 .order-card {
@@ -51,4 +53,17 @@
   padding: 5px 10px;
   border-radius: 6px;
   font-size: 14px;
+}
+
+@media (max-width: 768px) {
+  .admin-order-sales-container { flex-direction: column; padding: 14px; gap: 1.2rem; }
+  .orders-section, .sales-section { width: 100%; }
+  .order-card { padding: 12px; }
+  .status-btn { width: 100%; margin-top: 8px; }
+}
+
+@media (max-width: 480px) {
+  .admin-order-sales-container { padding: 10px; }
+  .order-card h4 { font-size: 0.9rem; }
+  .order-card ul { font-size: 0.85rem; }
 }
