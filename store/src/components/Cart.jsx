@@ -37,6 +37,11 @@ const Cart = () => {
   const increaseQtyCart = async (item) => {
     const itemKey = item._id?.toString();
     if (cartLoadingIds.has(itemKey)) return;
+    if ((item.stock ?? 0) === 0) { toast.warn('This item is out of stock.'); return; }
+    if (item.stock !== undefined && (item.quantity || 1) >= item.stock) {
+      toast.warn(`Only ${item.stock} available in stock.`);
+      return;
+    }
     const prevItems = cartItems;
     setCartItems(cartItems.map(ci =>
       ci._id?.toString() === itemKey ? { ...ci, quantity: (ci.quantity || 1) + 1 } : ci
@@ -55,11 +60,14 @@ const Cart = () => {
           quantity: 1,
         }),
       });
-      if (!res.ok) throw new Error();
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || 'Failed to update cart.');
+      }
       setCartItems(await res.json());
-    } catch {
+    } catch (err) {
       setCartItems(prevItems);
-      toast.error('Failed to update cart.');
+      toast.error(err.message || 'Failed to update cart.');
     } finally {
       setLoadingId(itemKey, false);
     }
@@ -226,6 +234,7 @@ const Cart = () => {
   const subtotal = cartItems.reduce((total, item) => total + item.price * (item.quantity || 1), 0);
   const cgst = subtotal * 0.10;
   const totalAmount = Math.round(subtotal + cgst);
+  const hasSoldOutItems = cartItems.some(item => (item.stock ?? 0) === 0);
 
   if (!isLoggedIn) return (
     <div className="cart-empty-page">
@@ -260,12 +269,15 @@ const Cart = () => {
               const itemKey = item._id?.toString();
               const isUpdating = cartLoadingIds.has(itemKey);
               return (
-                <div key={itemKey} className="cart-card">
+                <div key={itemKey} className={`cart-card${(item.stock ?? 0) === 0 ? ' cart-card-soldout' : ''}`}>
                   <img src={item.imgUrl} alt={item.name} className="cart-img" />
                   <div className="cart-info">
                     <p className="cart-item-name">{item.name}</p>
                     <p className="cart-item-sub">{item.type}</p>
                     <p className="cart-item-sub">⭐ {item.rating}</p>
+                    {(item.stock ?? 0) === 0 && (
+                      <p className="cart-item-soldout">Out of Stock — remove to checkout</p>
+                    )}
                     <p className="cart-item-price">₹{item.price.toLocaleString()}</p>
                     <div className="cart-item-actions">
                       <div className="cart-stepper">
@@ -275,7 +287,12 @@ const Cart = () => {
                             ? <span className="cart-stepper-dot" />
                             : <span key={item.quantity} className="stepper-num">{item.quantity || 1}</span>}
                         </span>
-                        <button className="cart-stepper-btn" onClick={() => increaseQtyCart(item)} aria-label="Increase">+</button>
+                        <button
+                          className="cart-stepper-btn"
+                          onClick={() => increaseQtyCart(item)}
+                          disabled={(item.stock ?? 0) === 0 || (item.stock !== undefined && (item.quantity || 1) >= item.stock)}
+                          aria-label="Increase"
+                        >+</button>
                       </div>
                       <button className="cart-remove-icon" onClick={() => handleRemove(item)} title="Remove item" aria-label="Remove">
                         <FaTrash />
@@ -296,7 +313,7 @@ const Cart = () => {
             <button
               className={`checkout-btn${paying ? ' paying' : ''}`}
               onClick={handlePayNow}
-              disabled={paying}
+              disabled={paying || hasSoldOutItems}
             >
               {paying ? (
                 <><span className="spinner" /> Processing…</>
@@ -304,6 +321,9 @@ const Cart = () => {
                 <><FaShoppingCart /> Pay Now ₹{totalAmount.toLocaleString()}</>
               )}
             </button>
+            {hasSoldOutItems && (
+              <p className="cart-soldout-warning">Remove out-of-stock items to proceed.</p>
+            )}
             <p className="razorpay-note">🔒 Secured by Razorpay</p>
           </div>
         </>

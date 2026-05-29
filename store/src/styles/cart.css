@@ -222,6 +222,36 @@
   to   { opacity: 1; transform: translateY(0)   scale(1);    }
 }
 
+/* ---------- Sold-out cart item ---------- */
+.cart-card-soldout {
+  border: 1.5px solid #fecaca;
+  opacity: 0.88;
+}
+
+.cart-item-soldout {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #ef4444;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 2px 0;
+}
+
+.cart-stepper-btn:disabled {
+  color: #cbd5e1;
+  cursor: not-allowed;
+  background: #f8fafc;
+}
+
+/* Warning shown above Pay Now when sold-out items exist */
+.cart-soldout-warning {
+  font-size: 0.78rem;
+  color: #ef4444;
+  font-weight: 600;
+  text-align: center;
+  margin: 8px 0 0;
+}
+
 /* ---------- Trash icon button ---------- */
 .cart-remove-icon {
   background: transparent;

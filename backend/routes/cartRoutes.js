@@ -1,31 +1,61 @@
 const express = require('express');
 const Cart = require('../models/cart');
 const Order = require('../models/order');
+const Bat = require('../models/bat');
 const auth = require('../middleware/auth');
 
 const router = express.Router();
 
-const withImgUrl = (items) =>
-  items.map(item => ({ ...item.toObject(), imgUrl: item.img }));
+// Enrich cart items with current stock from the Bat collection
+const withStockAndImg = async (items) =>
+  Promise.all(items.map(async (item) => {
+    const obj = item.toObject ? item.toObject() : { ...item };
+    obj.imgUrl = item.img || obj.img;
+    if (item.productId) {
+      const bat = await Bat.findById(item.productId, 'stock');
+      obj.stock = bat ? (bat.stock ?? 0) : 0;
+    }
+    return obj;
+  }));
 
 // GET cart
 router.get('/:email', auth, async (req, res) => {
   try {
     const cart = await Cart.findOne({ userEmail: req.params.email }) || { items: [] };
-    res.json(withImgUrl(cart.items));
+    res.json(await withStockAndImg(cart.items));
   } catch (err) {
     console.error('GET /cart error:', err);
     res.status(500).json({ message: 'Failed to get cart' });
   }
 });
 
-// POST — atomic upsert: increment qty if item exists, push if new
+// POST — atomic upsert with stock validation
 router.post('/:email', auth, async (req, res) => {
   try {
     const { email } = req.params;
     const { productId, name, type, price, rating, img, quantity = 1 } = req.body;
 
     if (!productId) return res.status(400).json({ message: 'productId required' });
+
+    // Stock check
+    const bat = await Bat.findById(productId, 'stock');
+    if (!bat) return res.status(404).json({ message: 'Product not found' });
+    const currentStock = bat.stock ?? 0;
+    if (currentStock <= 0) return res.status(400).json({ message: 'This item is out of stock.' });
+
+    // Ensure adding won't exceed available stock
+    const existingCart = await Cart.findOne({ userEmail: email });
+    if (existingCart) {
+      const existingItem = existingCart.items.find(
+        i => i.productId?.toString() === productId.toString()
+      );
+      const currentCartQty = existingItem?.quantity || 0;
+      if (currentCartQty + quantity > currentStock) {
+        const remaining = currentStock - currentCartQty;
+        if (remaining <= 0) return res.status(400).json({ message: 'You already have the maximum available quantity in your cart.' });
+        return res.status(400).json({ message: `Only ${remaining} more available in stock.` });
+      }
+    }
 
     // MongoDB positional operator: let the DB do the ObjectId cast & match
     let cart = await Cart.findOneAndUpdate(
@@ -43,7 +73,7 @@ router.post('/:email', auth, async (req, res) => {
       );
     }
 
-    res.json(withImgUrl(cart.items));
+    res.json(await withStockAndImg(cart.items));
   } catch (err) {
     console.error('POST /cart error:', err);
     res.status(500).json({ message: 'Failed to add item' });
@@ -91,7 +121,7 @@ router.patch('/:email/:productId', auth, async (req, res) => {
     }
 
     if (!cart) return res.status(404).json({ message: 'Cart not found' });
-    res.json(withImgUrl(cart.items));
+    res.json(await withStockAndImg(cart.items));
   } catch (err) {
     console.error('PATCH /cart error:', err);
     res.status(500).json({ message: 'Failed to update item' });
@@ -121,7 +151,7 @@ router.delete('/:email/:productId', auth, async (req, res) => {
       ) || cart;
     }
 
-    res.json(withImgUrl(cart.items));
+    res.json(await withStockAndImg(cart.items));
   } catch (err) {
     console.error('DELETE /cart error:', err);
     res.status(500).json({ message: 'Failed to remove item' });

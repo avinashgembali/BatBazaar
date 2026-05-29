@@ -19,11 +19,10 @@ const upload = multer({ storage });
 const router = express.Router();
 
 // All admin routes require: valid token (auth) + admin role (adminOnly)
-// The two middlewares run in order before the handler
 
 router.post('/bat', auth, adminOnly, upload.single('img'), async (req, res) => {
   try {
-    const { name, type, brand, rating, price } = req.body;
+    const { name, type, brand, rating, price, stock = 0 } = req.body;
     let imageUrl = '';
 
     if (req.file) {
@@ -40,7 +39,15 @@ router.post('/bat', auth, adminOnly, upload.single('img'), async (req, res) => {
       imageUrl = uploadResult.secure_url;
     }
 
-    const bat = new Bat({ name, type, brand, rating, price, img: imageUrl || req.body.img });
+    const bat = new Bat({
+      name,
+      type,
+      brand,
+      rating,
+      price,
+      img: imageUrl || req.body.img,
+      stock: Math.max(0, Number(stock) || 0),
+    });
     await bat.save();
     res.status(201).json(bat);
   } catch (err) {
@@ -54,6 +61,25 @@ router.delete('/bat/:id', auth, adminOnly, async (req, res) => {
     res.json({ message: 'Bat deleted' });
   } catch (err) {
     res.status(400).json({ error: err.message });
+  }
+});
+
+// Update stock for a bat
+router.patch('/bat/:id/stock', auth, adminOnly, async (req, res) => {
+  try {
+    const { stock } = req.body;
+    if (stock === undefined || isNaN(Number(stock)) || Number(stock) < 0) {
+      return res.status(400).json({ message: 'Valid stock quantity (>= 0) required' });
+    }
+    const bat = await Bat.findByIdAndUpdate(
+      req.params.id,
+      { stock: Math.floor(Number(stock)) },
+      { new: true }
+    );
+    if (!bat) return res.status(404).json({ message: 'Bat not found' });
+    res.json(bat);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 

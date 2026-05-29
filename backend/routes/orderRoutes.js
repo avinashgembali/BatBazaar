@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const Razorpay = require('razorpay');
 const Cart = require('../models/cart');
 const Order = require('../models/order');
+const Bat = require('../models/bat');
 const auth = require('../middleware/auth');
 
 const router = express.Router();
@@ -14,59 +15,67 @@ const razorpay = new Razorpay({
 });
 
 // ─── STEP 1: Create a Razorpay order ─────────────────────────────────────────
-// Frontend calls this first when user clicks "Pay Now".
-// We create an order on Razorpay's servers and send back the orderId + amount.
-// The frontend uses this to open the Razorpay checkout popup.
-//
-// Why backend? The Key Secret must never go to the frontend.
-// Only the backend (with the secret) can create orders on Razorpay.
-
 router.post('/create-razorpay-order', auth, async (req, res) => {
   try {
     const { amount } = req.body; // amount in rupees from frontend
 
     const options = {
-      amount: Math.round(amount * 100), // Razorpay needs paise (1 rupee = 100 paise)
+      amount: Math.round(amount * 100), // Razorpay needs paise
       currency: 'INR',
       receipt: `receipt_${Date.now()}`,
     };
 
     const order = await razorpay.orders.create(options);
-    // order.id looks like: "order_PAbcdXYZ..."
-    // Send this back to frontend to open the checkout popup
-
     res.json({ orderId: order.id, amount: order.amount, currency: order.currency });
   } catch (err) {
     res.status(500).json({ message: 'Failed to create Razorpay order', error: err.message });
   }
 });
 
-// ─── STEP 2: Verify payment + save order ─────────────────────────────────────
-// After the user pays in the Razorpay popup, Razorpay gives the frontend:
-//   razorpay_order_id, razorpay_payment_id, razorpay_signature
-//
-// We verify the signature here to confirm payment is genuine (not faked).
-// Signature check: HMAC-SHA256(razorpay_order_id + "|" + razorpay_payment_id, KeySecret)
-// If it matches the signature Razorpay sent → payment is real → save order to DB.
-
+// ─── STEP 2: Verify payment + deduct stock + save order ──────────────────────
 router.post('/place', auth, async (req, res) => {
   const { email, items, razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
 
   try {
-    // Build the expected signature using our Key Secret
+    // Verify payment signature — confirms payment is genuine
     const expectedSignature = crypto
       .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
       .update(`${razorpay_order_id}|${razorpay_payment_id}`)
       .digest('hex');
 
-    // If signatures don't match → someone tampered with the payment data
     if (expectedSignature !== razorpay_signature) {
       return res.status(400).json({ message: 'Payment verification failed. Invalid signature.' });
     }
 
-    // Signature valid — payment is genuine. Save the order.
+    // Atomically deduct stock for each item; rollback all on any failure
+    const deducted = [];
+    for (const item of items) {
+      if (!item.productId) continue;
+      const qty = item.quantity || 1;
+
+      // findOneAndUpdate with $gte guard prevents stock going below 0
+      const updated = await Bat.findOneAndUpdate(
+        { _id: item.productId, stock: { $gte: qty } },
+        { $inc: { stock: -qty } },
+        { new: true }
+      );
+
+      if (!updated) {
+        // Rollback all previously deducted stock
+        for (const { id, qty: q } of deducted) {
+          await Bat.findByIdAndUpdate(id, { $inc: { stock: q } });
+        }
+        return res.status(400).json({
+          message: `"${item.name}" is out of stock or has insufficient quantity. Please update your cart.`,
+        });
+      }
+
+      deducted.push({ id: updated._id, qty });
+    }
+
+    // Stock deducted — save the order
     const total = items.reduce((sum, item) => sum + item.price * (item.quantity || 1), 0);
-    const totalWithTax = Math.round(total * 1.10); // includes 10% CGST
+    const totalWithTax = Math.round(total * 1.10); // 10% CGST
 
     const newOrder = new Order({
       userEmail: email,

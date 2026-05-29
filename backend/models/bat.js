@@ -23,7 +23,12 @@ const batSchema = new mongoose.Schema({
   },
   img: {
     type: String,
-    required: true 
+    required: true
+  },
+  stock: {
+    type: Number,
+    default: 0,
+    min: 0,
   },
   createdAt: {
     type: Date,
