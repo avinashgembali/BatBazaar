@@ -323,6 +323,9 @@
     height: 46px;
   }
 
+  /* Hide the FAB when chat is open — header already has a close button */
+  .chatbot-fab.open { display: none; }
+
   .chat-bubble { font-size: 0.82rem; max-width: 85%; }
   .chat-suggestions { padding-left: 8px; }
   .suggestion-chip { font-size: 0.72rem; padding: 4px 10px; }
